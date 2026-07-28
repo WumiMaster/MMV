@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局样式 */
+:root {
+  --color-primary: #FF9EB5;
+  --color-primary-light: #FFD1E0;
+  --color-secondary: #7ED7A7;
+  --color-secondary-light: #B8EBCE;
+  --color-bg-start: #f0e0e8;
+  --color-bg-mid: #e8d8e8;
+  --color-bg-end: #d8eedf;
+  --color-glass: rgba(255, 240, 245, 0.55);
+  --color-glass-tint: rgba(255, 200, 220, 0.25);
+  --color-glass-border: rgba(255, 255, 255, 0.5);
+  --color-text: #2d2d2d;
+  --color-text-secondary: #666666;
+  --color-danger: #FF6B6B;
+  --color-success: #51CF66;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, var(--color-bg-start) 0%, var(--color-bg-mid) 50%, var(--color-bg-end) 100%);
+  min-height: 100vh;
+  color: var(--color-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* iOS 26 液态玻璃效果 */
+@layer components {
+  .glass-card {
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    backdrop-filter: blur(40px) saturate(180%);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 232, 242, 0.65) 0%,
+      rgba(255, 215, 230, 0.5) 50%,
+      rgba(225, 255, 238, 0.45) 100%
+    );
+    border: 1px solid rgba(220, 210, 218, 0.55);
+    border-radius: 28px;
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.1),
+      0 4px 12px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .glass-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid rgba(200, 190, 198, 0.5);
+    border-radius: 14px;
+    background: rgba(255, 242, 248, 0.6);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    color: var(--color-text);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .glass-input::placeholder {
+    color: #b0b0b0;
+  }
+
+  .glass-input:focus {
+    border-color: #6BC99A;
+    background: rgba(255, 248, 252, 0.88);
+    box-shadow: 0 0 0 4px rgba(126, 215, 167, 0.22), 0 4px 14px rgba(0, 0, 0, 0.07);
+  }
+
+  .btn-primary {
+    width: 100%;
+    height: 50px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #FF9EB5, #FFB8CC);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 5px 18px rgba(255, 158, 181, 0.4);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 7px 26px rgba(255, 158, 181, 0.5);
+    background: linear-gradient(135deg, #FFB0C5, #FFC8D8);
+  }
+
+  .btn-primary:active {
+    box-shadow: 0 3px 10px rgba(255, 158, 181, 0.35);
+  }
+
+  .btn-secondary {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #7ED7A7, #A0E8C0);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 5px 18px rgba(126, 215, 167, 0.4);
+  }
+
+  .btn-secondary:hover {
+    box-shadow: 0 7px 24px rgba(126, 215, 167, 0.5);
+    background: linear-gradient(135deg, #90E0B5, #B0F0C8);
+  }
+
+  .btn-cancel {
+    height: 48px;
+    border: 1px solid rgba(200, 190, 198, 0.55);
+    background: rgba(255, 245, 250, 0.6);
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    color: #666;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn-cancel:hover {
+    background: rgba(255, 238, 245, 0.72);
+    border-color: rgba(200, 190, 198, 0.65);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* iOS 风格动画 */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-overlay-in {
+  animation: overlayIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-modal-in {
+  animation: modalIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}

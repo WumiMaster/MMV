@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF9EB5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7ED7A7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- 背景圆形 -->
+  <circle cx="50" cy="50" r="48" fill="url(#grad)" stroke="white" stroke-width="3"/>
+  <!-- 猫爪肉垫 -->
+  <ellipse cx="50" cy="58" rx="18" ry="15" fill="white" opacity="0.9"/>
+  <!-- 左上爪趾 -->
+  <circle cx="32" cy="38" r="9" fill="white" opacity="0.9"/>
+  <!-- 右上爪趾 -->
+  <circle cx="68" cy="38" r="9" fill="white" opacity="0.9"/>
+  <!-- 左下爪趾 -->
+  <circle cx="26" cy="52" r="8" fill="white" opacity="0.9"/>
+  <!-- 右下爪趾 -->
+  <circle cx="74" cy="52" r="8" fill="white" opacity="0.9"/>
+</svg>

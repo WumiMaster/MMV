@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>精简语音频道 - UI 原型</title>
+  <style>
+    :root {
+      --color-primary: #FF9EB5;
+      --color-primary-light: #FFD1E0;
+      --color-secondary: #7ED7A7;
+      --color-secondary-light: #B8EBCE;
+      --color-bg: #FFF5F8;
+      --color-glass: rgba(255, 255, 255, 0.45);
+      --color-glass-border: rgba(255, 255, 255, 0.6);
+      --color-text: #333333;
+      --color-text-secondary: #666666;
+      --color-danger: #FF6B6B;
+      --color-success: #51CF66;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, var(--color-bg) 0%, #ffe8f0 50%, #e8f9ef 100%);
+      min-height: 100vh;
+      color: var(--color-text);
+      overflow-x: hidden;
+    }
+
+    /* 背景装饰 */
+    .bg-decoration {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-decoration-1 {
+      width: 400px;
+      height: 400px;
+      background: var(--color-primary);
+      top: -100px;
+      right: -100px;
+    }
+
+    .bg-decoration-2 {
+      width: 300px;
+      height: 300px;
+      background: var(--color-secondary);
+      bottom: -80px;
+      left: -80px;
+    }
+
+    /* 导航原型切换 */
+    .proto-nav {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+      background: var(--color-glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-glass-border);
+      padding: 10px 20px;
+      border-radius: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .proto-nav.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(20px);
+    }
+
+    .proto-nav button {
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: transparent;
+      color: var(--color-text);
+    }
+
+    .proto-nav button.active {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 158, 181, 0.4);
+    }
+
+    .proto-nav button:hover {
+      transform: scale(1.05);
+    }
+
+    /* 页面容器 */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+      padding: 20px;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部导航栏 */
+    .top-navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--color-glass);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .channel-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .channel-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .channel-id {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .copy-btn {
+      background: rgba(126, 215, 167, 0.2);
+      border: none;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--color-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(126, 215, 167, 0.35);
+      transform: scale(1.05);
+    }
+
+    .nav-right {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      font-size: 18px;
+    }
+
+    .icon-btn:hover {
+      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .icon-btn.primary {
+      background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-light));
+      color: white;
+    }
+
+    /* 玻璃卡片 */
+    .glass-card {
+      background: var(--color-glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-glass-border);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 登录注册页 */
+    .auth-screen {
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      text-align: center;
+      animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .auth-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 36px;
+      box-shadow: 0 8px 24px rgba(255, 158, 181, 0.4);
+    }
+
+    .auth-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      color: var(--color-text-secondary);
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      border: 1px solid var(--color-glass-border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.6);
+      font-size: 15px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--color-secondary);
+      background: rgba(255, 255, 255, 0.85);
+      transform: scale(1.02);
+      box-shadow: 0 0 0 4px rgba(126, 215, 167, 0.15);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+    }
+
+    .btn-primary {
+      width: 100%;
+      height: 50px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 6px 20px rgba(255, 158, 181, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 28px rgba(255, 158, 181, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .auth-link {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .auth-link a {
+      color: var(--color-secondary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .auth-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* 头像上传 */
+    .avatar-upload {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 2px dashed var(--color-glass-border);
+      background: rgba(255, 255, 255, 0.4);
+      margin: 0 auto 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+    }
+
+    .avatar-upload:hover {
+      border-color: var(--color-secondary);
+      background: rgba(255, 255, 255, 0.7);
+      transform: scale(1.05);
+    }
+
+    .avatar-upload .icon {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    /* 管理员后台 */
+    .admin-screen {
+      padding-top: 84px;
+    }
+
+    .admin-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .admin-card {
+      padding: 28px;
+      animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .admin-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .btn-green {
+      height: 42px;
+      padding: 0 20px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-light));
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 4px 15px rgba(126, 215, 167, 0.35);
+    }
+
+    .btn-green:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(126, 215, 167, 0.45);
+    }
+
+    .user-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .user-table th,
+    .user-table td {
+      padding: 16px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .user-table th {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .user-table tr:hover td {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .role-admin {
+      background: rgba(255, 158, 181, 0.2);
+      color: #d63384;
+    }
+
+    .role-user {
+      background: rgba(126, 215, 167, 0.2);
+      color: #2b8a3e;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-edit {
+      padding: 6px 14px;
+      border: 1px solid var(--color-secondary);
+      background: transparent;
+      color: var(--color-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+
+    .btn-edit:hover {
+      background: var(--color-secondary);
+      color: white;
+    }
+
+    .btn-delete {
+      padding: 6px 14px;
+      border: none;
+      background: transparent;
+      color: var(--color-danger);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+
+    .btn-delete:hover {
+      background: rgba(255, 107, 107, 0.1);
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .pagination button {
+      padding: 8px 16px;
+      border: 1px solid var(--color-glass-border);
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pagination button:hover {
+      background: rgba(255, 255, 255, 0.8);
+      transform: scale(1.05);
+    }
+
+    /* 频道页 */
+    .channel-screen {
+      padding-top: 84px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .channel-empty {
+      text-align: center;
+      padding: 60px;
+      max-width: 500px;
+    }
+
+    .channel-empty-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      opacity: 0.7;
+    }
+
+    .channel-empty-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .channel-empty-desc {
+      color: var(--color-text-secondary);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* 弹窗 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      width: 90%;
+      max-width: 440px;
+      padding: 28px;
+      animation: modalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.15s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.8);
+      transform: scale(1.1);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-footer .btn-primary,
+    .modal-footer .btn-cancel {
+      flex: 1;
+    }
+
+    .btn-cancel {
+      height: 48px;
+      border: 1px solid var(--color-glass-border);
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.15s;
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    /* 提示 */
+    .toast {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--color-glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--color-glass-border);
+      padding: 14px 24px;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      z-index: 2000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .top-navbar {
+        padding: 0 16px;
+      }
+
+      .channel-name {
+        font-size: 13px;
+      }
+
+      .auth-card {
+        padding: 28px 24px;
+      }
+
+      .admin-card {
+        padding: 20px;
+      }
+
+      .user-table th,
+      .user-table td {
+        padding: 12px 8px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景装饰 -->
+  <div class="bg-decoration bg-decoration-1"></div>
+  <div class="bg-decoration bg-decoration-2"></div>
+
+  <!-- 原型导航 -->
+  <div class="proto-nav">
+    <button class="active" onclick="showScreen('login')">登录页</button>
+    <button onclick="showScreen('register')">注册页</button>
+    <button onclick="showScreen('admin')">管理员后台</button>
+    <button onclick="showScreen('channel')">频道页</button>
+  </div>
+
+  <!-- 提示 -->
+  <div class="toast" id="toast">这是一个提示消息</div>
+
+  <!-- 登录页 -->
+  <div class="screen auth-screen active" id="screen-login">
+    <div class="glass-card auth-card">
+      <div class="auth-logo">🎙️</div>
+      <div class="auth-title">欢迎回来</div>
+      <div class="auth-subtitle">登录你的语音频道账号</div>
+
+      <div class="form-group">
+        <label class="form-label">用户名</label>
+        <input type="text" class="form-input" placeholder="请输入用户名">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">密码</label>
+        <div class="input-wrapper">
+          <input type="password" class="form-input" placeholder="请输入密码">
+          <button class="eye-btn">👁</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="showLoginChoice()">登 录</button>
+
+      <div class="auth-link">
+        还没有账号？<a href="#" onclick="showScreen('register')">去注册 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 注册页 -->
+  <div class="screen auth-screen" id="screen-register">
+    <div class="glass-card auth-card">
+      <div class="auth-logo">🎙️</div>
+      <div class="auth-title">创建账号</div>
+      <div class="auth-subtitle">加入精简语音频道</div>
+
+      <div class="avatar-upload">
+        <div class="icon">📷</div>
+        <div>点击上传头像</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">用户名 *</label>
+        <input type="text" class="form-input" placeholder="请输入用户名">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">密码 *</label>
+        <div class="input-wrapper">
+          <input type="password" class="form-input" placeholder="请输入密码">
+          <button class="eye-btn">👁</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">确认密码 *</label>
+        <div class="input-wrapper">
+          <input type="password" class="form-input" placeholder="请再次输入密码">
+          <button class="eye-btn">👁</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">昵称 *</label>
+        <input type="text" class="form-input" placeholder="对外显示的昵称">
+      </div>
+
+      <button class="btn-primary" onclick="showToast('注册成功！')">注 册</button>
+
+      <div class="auth-link">
+        已有账号？<a href="#" onclick="showScreen('login')">去登录 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员后台 -->
+  <div class="screen admin-screen" id="screen-admin">
+    <!-- 顶部导航栏 -->
+    <div class="top-navbar">
+      <div class="nav-left">
+        <div class="logo">🎙️</div>
+        <div class="channel-info">
+          <div class="channel-name">管理员后台</div>
+          <div class="channel-id">系统管理面板</div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <button class="icon-btn">⚙️</button>
+        <button class="icon-btn primary">🚪</button>
+      </div>
+    </div>
+
+    <div class="admin-container">
+      <div class="glass-card admin-card">
+        <div class="admin-header">
+          <div class="admin-title">用户管理</div>
+          <button class="btn-green" onclick="showModal()">+ 新增用户</button>
+        </div>
+
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>头像</th>
+              <th>用户名</th>
+              <th>昵称</th>
+              <th>角色</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="user-avatar">🐱</div></td>
+              <td>user01</td>
+              <td>小明</td>
+              <td><span class="role-badge role-user">普通用户</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-edit">编辑</button>
+                  <button class="btn-delete">删除</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><div class="user-avatar">🐶</div></td>
+              <td>admin</td>
+              <td>管理员</td>
+              <td><span class="role-badge role-admin">管理员</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-edit">编辑</button>
+                  <button class="btn-delete">删除</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><div class="user-avatar">🦊</div></td>
+              <td>user02</td>
+              <td>小红</td>
+              <td><span class="role-badge role-user">普通用户</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-edit">编辑</button>
+                  <button class="btn-delete">删除</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <button>上一页</button>
+          <span>第 1 / 3 页</span>
+          <button>下一页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 频道页 -->
+  <div class="screen channel-screen" id="screen-channel">
+    <!-- 顶部导航栏 -->
+    <div class="top-navbar">
+      <div class="nav-left">
+        <div class="logo">🎙️</div>
+        <div class="channel-info">
+          <div class="channel-name">当前频道：未加入频道</div>
+          <div class="channel-id">
+            ID: -
+            <button class="copy-btn" onclick="showToast('已复制频道ID')">复制</button>
+          </div>
+        </div>
+      </div>
+      <div class="nav-right">
+        <button class="icon-btn primary">+</button>
+        <button class="icon-btn">⚙️</button>
+      </div>
+    </div>
+
+    <div class="glass-card channel-empty">
+      <div class="channel-empty-icon">🪟</div>
+      <div class="channel-empty-title">还没有打开任何窗口</div>
+      <div class="channel-empty-desc">
+        阶段1仅展示顶部导航栏和窗口容器区域。<br>
+        阶段2开始，文字/语音子频道将以悬浮窗口形式在这里打开。
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增用户弹窗 -->
+  <div class="modal-overlay" id="modal" onclick="hideModal(event)">
+    <div class="glass-card modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">新增用户</div>
+        <button class="modal-close" onclick="hideModal()">×</button>
+      </div>
+
+      <div class="avatar-upload">
+        <div class="icon">📷</div>
+        <div>点击上传头像</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">用户名 *</label>
+        <input type="text" class="form-input" placeholder="请输入用户名">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">密码 *</label>
+        <input type="password" class="form-input" placeholder="请输入密码">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">昵称 *</label>
+        <input type="text" class="form-input" placeholder="对外显示的昵称">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="hideModal()">取消</button>
+        <button class="btn-primary" onclick="hideModal(); showToast('用户创建成功')">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员登录后选择弹窗 -->
+  <div class="modal-overlay" id="choice-modal" onclick="hideChoiceModal(event)">
+    <div class="glass-card modal" onclick="event.stopPropagation()" style="text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <div class="modal-title">检测到管理员账号</div>
+      </div>
+
+      <p style="color: var(--color-text-secondary); margin-bottom: 24px; line-height: 1.6;">
+        你的账号拥有管理员权限，请选择要进入的页面。
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button class="btn-primary" style="width: 100%;" onclick="hideChoiceModal(); showScreen('channel')">
+          🎙️ 进入频道页面
+        </button>
+        <button class="btn-green" style="width: 100%; height: 48px; border-radius: 14px; font-size: 15px;" onclick="hideChoiceModal(); showScreen('admin')">
+          ⚙️ 进入管理后台
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(screenName) {
+      // 隐藏所有 screen
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      // 显示目标 screen
+      document.getElementById('screen-' + screenName).classList.add('active');
+      // 更新导航按钮状态
+      document.querySelectorAll('.proto-nav button').forEach((btn, index) => {
+        const screens = ['login', 'register', 'admin', 'channel'];
+        if (screens[index] === screenName) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      // 控制底部 dock 栏显示：仅在登录页和注册页显示
+      const dock = document.querySelector('.proto-nav');
+      if (screenName === 'login' || screenName === 'register') {
+        dock.classList.remove('hidden');
+      } else {
+        dock.classList.add('hidden');
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+
+    function showModal() {
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function hideModal(event) {
+      if (!event || event.target.id === 'modal') {
+        document.getElementById('modal').classList.remove('active');
+      }
+    }
+
+    // 登录后显示管理员选择弹窗（原型中统一展示，实际根据后端返回角色判断）
+    function showLoginChoice() {
+      document.getElementById('choice-modal').classList.add('active');
+    }
+
+    function hideChoiceModal(event) {
+      if (!event || event.target.id === 'choice-modal') {
+        document.getElementById('choice-modal').classList.remove('active');
+      }
+    }
+  </script>
+</body>
+</html>
