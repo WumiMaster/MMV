@@ -851,29 +851,30 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+  padding: 10px 16px;
   border-bottom: 1px solid rgba(220, 200, 210, 0.4);
   background: rgba(255, 242, 250, 0.4);
+  flex-shrink: 0;
 }
 
 .voice-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #333;
 }
 
 .voice-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   color: #FF9EB5;
 }
 
 .leave-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
   border: none;
   background: rgba(255, 107, 107, 0.15);
@@ -889,8 +890,8 @@ defineExpose({
 }
 
 .leave-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: #FF6B6B;
 }
 
@@ -998,29 +999,29 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  padding: 8px 16px;
   border-top: 1px solid rgba(220, 200, 210, 0.4);
   background: rgba(255, 242, 250, 0.4);
+  flex-shrink: 0;
 }
 
 .control-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   border: none;
   background: rgba(255, 240, 248, 0.6);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .control-btn:hover {
   background: rgba(255, 230, 240, 0.8);
-  transform: translateY(-1px);
 }
 
 .control-btn.active {
@@ -1029,8 +1030,8 @@ defineExpose({
 }
 
 .control-btn svg {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   color: #666;
 }
 
@@ -1041,7 +1042,7 @@ defineExpose({
 .volume-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 0 12px;
 }
 

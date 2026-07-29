@@ -39,6 +39,19 @@ class UpdateChannelRequest(BaseModel):
     message_retention_days: Optional[int] = None
 
 
+class SubChannelResponse(BaseModel):
+    """子频道响应"""
+    id: int
+    channel_id: int
+    name: str
+    type: str
+    sort_order: int
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
 class ChannelResponse(BaseModel):
     """频道响应"""
     id: int
@@ -51,6 +64,7 @@ class ChannelResponse(BaseModel):
     created_at: str
     member_count: int = 0
     sub_channel_count: int = 0
+    sub_channels: Optional[List[SubChannelResponse]] = []
 
     class Config:
         from_attributes = True
@@ -75,19 +89,6 @@ class UpdateSubChannelRequest(BaseModel):
     """更新子频道请求"""
     name: Optional[str] = None
     sort_order: Optional[int] = None
-
-
-class SubChannelResponse(BaseModel):
-    """子频道响应"""
-    id: int
-    channel_id: int
-    name: str
-    type: str
-    sort_order: int
-    created_at: str
-
-    class Config:
-        from_attributes = True
 
 
 # ==================== 频道管理接口 ====================
@@ -136,6 +137,48 @@ async def create_channel(
         created_at=str(channel.created_at),
         member_count=0,
         sub_channel_count=0
+    )
+
+
+@router.get("/channels/{channel_id}", response_model=ChannelResponse)
+async def get_channel_detail(
+    channel_id: int,
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    获取频道详情（管理员）
+    需要管理员权限
+    """
+    channel = db.query(Channel).filter(Channel.id == channel_id).first()
+    if not channel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="频道不存在"
+        )
+
+    member_count = len(channel.members)
+    sub_channel_count = len(channel.sub_channels)
+
+    return ChannelResponse(
+        id=channel.id,
+        name=channel.name,
+        channel_id=channel.channel_id,
+        description=channel.description,
+        avatar=channel.avatar,
+        message_retention_days=channel.message_retention_days,
+        creator_id=channel.creator_id,
+        created_at=str(channel.created_at),
+        member_count=member_count,
+        sub_channel_count=sub_channel_count,
+        sub_channels=[SubChannelResponse(
+            id=sc.id,
+            channel_id=sc.channel_id,
+            name=sc.name,
+            type=sc.type,
+            sort_order=sc.sort_order,
+            created_at=str(sc.created_at)
+        ) for sc in channel.sub_channels]
     )
 
 

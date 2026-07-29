@@ -68,41 +68,12 @@
 
       <!-- 右侧：窗口区域 -->
       <div class="content-area">
-        <!-- 文字子频道聊天窗口 -->
-        <div v-if="currentSubChannel && currentSubChannel.type === 'text'" class="content-wrapper animate-in" :key="'text-' + currentSubChannel.id">
-          <ChatWindow
-            ref="chatWindowRef"
-            :sub-channel-id="currentSubChannel.id"
-            :sub-channel-name="currentSubChannel.name"
-            :current-user-id="authStore.user?.id"
-            @send="handleSendMessage"
-          />
-        </div>
-        <!-- 语音子频道窗口 -->
-        <div v-else-if="currentSubChannel && currentSubChannel.type === 'voice'" class="content-wrapper animate-in voice-content-wrapper" :key="'voice-' + currentSubChannel.id">
-          <VoiceWindow
-            ref="voiceWindowRef"
-            :sub-channel-id="currentSubChannel.id"
-            :sub-channel-name="currentSubChannel.name"
-            :channel-id="currentChannel?.id"
-            @close="handleVoiceClose"
-          />
-          <!-- 音频电平指示器 -->
-          <AudioLevelIndicator
-            :show="true"
-            :stream="voiceStream"
-          />
-        </div>
-        <!-- 空状态 -->
-        <div v-else class="empty-state content-wrapper animate-in">
-          <svg class="empty-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <div class="empty-title">选择一个子频道开始聊天</div>
-          <div class="empty-desc">
-            {{ currentChannel ? '从左侧选择一个文字或语音子频道' : '先从上方加入或选择一个频道' }}
-          </div>
-        </div>
+        <!-- 悬浮窗口管理器 -->
+        <WindowManager
+          ref="windowManagerRef"
+          :current-user-id="authStore.user?.id"
+          @send-message="handleSendMessage"
+        />
       </div>
     </div>
 
@@ -135,17 +106,15 @@
  * 顶部导航栏显示频道列表，下方左侧显示子频道列表，右侧显示聊天窗口
  */
 
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import api from '../../api'
 import SubChannelList from '../../components/channel/SubChannelList.vue'
-import ChatWindow from '../../components/channel/ChatWindow.vue'
-import VoiceWindow from '../../components/channel/VoiceWindow.vue'
+import WindowManager from '../../components/window/WindowManager.vue'
 import JoinChannelModal from '../../components/channel/JoinChannelModal.vue'
 import SettingsWindow from '../../components/channel/SettingsWindow.vue'
 import NetworkMonitor from '../../components/common/NetworkMonitor.vue'
-import AudioLevelIndicator from '../../components/common/AudioLevelIndicator.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -155,15 +124,13 @@ const myChannels = ref([])
 const currentChannel = ref(null)
 const subChannels = ref([])
 const currentSubChannel = ref(null)
-const voiceWindowRef = ref(null)
-const voiceStream = ref(null)
+const windowManagerRef = ref(null)
 
 // UI 状态
 const showJoinModal = ref(false)
 const showSettings = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
-const chatWindowRef = ref(null)
 
 // WebSocket 连接
 let ws = null
@@ -206,10 +173,22 @@ async function selectChannel(channel) {
   currentChannel.value = channel
   currentSubChannel.value = null
 
+  // 关闭所有已打开的窗口
+  if (windowManagerRef.value) {
+    windowManagerRef.value.closeTextWindow()
+    windowManagerRef.value.closeVoiceWindow()
+  }
+
   // 加载子频道列表
   try {
     const response = await api.get(`/api/channels/${channel.id}`)
     subChannels.value = response.data.sub_channels
+
+    // 自动打开第一个文字子频道
+    const firstTextChannel = subChannels.value.find(sc => sc.type === 'text')
+    if (firstTextChannel) {
+      selectSubChannel(firstTextChannel)
+    }
   } catch (error) {
     console.error('加载子频道失败:', error)
     subChannels.value = []
@@ -219,8 +198,22 @@ async function selectChannel(channel) {
   connectWebSocket(channel.id)
 }
 
-// 选择子频道
+// 选择子频道（打开对应类型窗口）
 function selectSubChannel(subChannel) {
+  if (!windowManagerRef.value) return
+
+  const config = {
+    subChannelId: subChannel.id,
+    channelId: currentChannel.value?.id,
+    title: subChannel.name
+  }
+
+  if (subChannel.type === 'text') {
+    windowManagerRef.value.openTextWindow(config)
+  } else if (subChannel.type === 'voice') {
+    windowManagerRef.value.openVoiceWindow(config)
+  }
+
   currentSubChannel.value = subChannel
 }
 
@@ -235,29 +228,6 @@ function handleChannelJoined(channel) {
 function handleSendMessage(message) {
   // 目前后端在保存消息时会自动广播
 }
-
-// 语音窗口关闭
-function handleVoiceClose() {
-  voiceStream.value = null
-  currentSubChannel.value = null
-}
-
-// 获取语音流（用于音频指示器）
-function updateVoiceStream() {
-  if (voiceWindowRef.value && voiceWindowRef.value.localStream) {
-    voiceStream.value = voiceWindowRef.value.localStream
-  }
-}
-
-// 监听子频道变化，更新语音流
-watch(currentSubChannel, (newVal) => {
-  if (newVal && newVal.type === 'voice') {
-    // 延迟获取流，等待 VoiceWindow 初始化
-    setTimeout(updateVoiceStream, 1000)
-  } else {
-    voiceStream.value = null
-  }
-})
 
 // 连接 WebSocket
 function connectWebSocket(channelId) {
@@ -313,22 +283,14 @@ function connectWebSocket(channelId) {
 function handleWebSocketMessage(data) {
   switch (data.type) {
     case 'new_message':
-      // 新消息：检查是否属于当前子频道，再添加到聊天窗口
-      if (chatWindowRef.value && data.message) {
-        // 只有当消息属于当前打开的子频道时才添加
-        if (data.message.sub_channel_id === currentSubChannel.value?.id) {
-          chatWindowRef.value.addMessage(data.message)
-        }
+      // 新消息：通过全局事件总线通知 ChatWindow
+      if (data.message) {
+        window.dispatchEvent(new CustomEvent('new-message', { detail: data.message }))
       }
       break
-    case 'user_joined':
-      showToastMsg(`${data.nickname} 加入了频道`)
-      break
-    case 'user_left':
-      showToastMsg(`${data.nickname} 离开了频道`)
-      break
+    // 不再显示加入/离开提示
     default:
-      console.log('未知消息类型:', data.type)
+      break
   }
 }
 
@@ -361,18 +323,18 @@ onMounted(() => {
 
 <style scoped>
 .channel-container {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   position: relative;
   z-index: 1;
 }
 
 /* 顶部导航栏 - iOS 26 液态玻璃 */
 .top-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   height: 64px;
+  flex-shrink: 0;
   background: linear-gradient(
     90deg,
     rgba(255, 230, 240, 0.65) 0%,
@@ -579,15 +541,15 @@ onMounted(() => {
 
 /* 主内容区域 */
 .main-content {
-  padding-top: 64px;
-  height: 100vh;
+  flex: 1;
   display: flex;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .content-area {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  position: relative;
   overflow: hidden;
   background: linear-gradient(
     135deg,
@@ -599,13 +561,17 @@ onMounted(() => {
 
 /* 空状态 */
 .empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 40px;
-  height: 100%;
   color: #555;
+  pointer-events: none;
 }
 
 .empty-icon-svg {

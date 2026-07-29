@@ -490,7 +490,7 @@ async function manageSubChannels(channel) {
 // 加载子频道列表
 async function loadSubChannels(channelId) {
   try {
-    const response = await api.get(`/api/channels/${channelId}`)
+    const response = await api.get(`/api/admin/channels/${channelId}`)
     subChannels.value = response.data.sub_channels
   } catch (error) {
     showToast('加载子频道失败', 'error')
@@ -502,13 +502,22 @@ async function handleCreateSubChannel() {
   if (!subChannelForm.value.name || !currentManageChannel.value) return
 
   try {
-    await api.post(`/api/admin/channels/${currentManageChannel.value.id}/sub-channels`, subChannelForm.value)
+    const data = {
+      name: subChannelForm.value.name,
+      type: subChannelForm.value.type,
+      sort_order: Number(subChannelForm.value.sort_order) || 0
+    }
+    console.log('创建子频道:', data)
+    console.log('频道ID:', currentManageChannel.value.id)
+    const response = await api.post(`/api/admin/channels/${currentManageChannel.value.id}/sub-channels`, data)
+    console.log('创建成功:', response.data)
     showToast('子频道添加成功')
     showCreateSubChannelModal.value = false
     subChannelForm.value = { name: '', type: 'text', sort_order: 0 }
     loadSubChannels(currentManageChannel.value.id)
     loadChannels(currentPage.value)
   } catch (error) {
+    console.error('创建子频道失败:', error)
     showToast(error.response?.data?.detail || '添加失败', 'error')
   }
 }

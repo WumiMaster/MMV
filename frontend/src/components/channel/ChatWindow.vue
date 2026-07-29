@@ -101,7 +101,7 @@
  * 显示消息列表和输入框
  */
 
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import api from '../../api'
 import MessageInput from './MessageInput.vue'
 
@@ -142,6 +142,9 @@ const dragStartX = ref(0)
 const dragStartY = ref(0)
 const dragStartPanX = ref(0)
 const dragStartPanY = ref(0)
+
+// 待处理的消息（用于超时回退）
+const pendingMessages = ref(new Map())
 
 // 新消息提示相关
 const isAtBottom = ref(true)
@@ -225,8 +228,20 @@ async function handleSendMessage(messageData) {
       image_url: messageData.image_url
     })
 
-    // 不在本地添加，由父组件统一处理（避免重复显示）
-    // 通知父组件（父组件会添加到消息列表并广播WebSocket）
+    // 设置超时，如果 WebSocket 没有广播回来，手动添加
+    const messageId = response.data.id
+    const timeout = setTimeout(() => {
+      // 检查消息是否已经添加
+      if (!messages.value.find(m => m.id === messageId)) {
+        messages.value.push(response.data)
+        scrollToBottom()
+      }
+    }, 2000)
+
+    // 存储超时 ID 以便清理
+    pendingMessages.value.set(messageId, timeout)
+
+    // 通知父组件（用于WebSocket广播）
     emit('send', response.data)
   } catch (error) {
     console.error('发送消息失败:', error)
@@ -394,10 +409,53 @@ watch(() => props.subChannelId, (newId, oldId) => {
   }
 })
 
+// 处理全局新消息事件
+function handleGlobalMessage(event) {
+  const message = event.detail
+  if (message && message.sub_channel_id === props.subChannelId) {
+    // 清除超时回退
+    if (pendingMessages.value.has(message.id)) {
+      clearTimeout(pendingMessages.value.get(message.id))
+      pendingMessages.value.delete(message.id)
+    }
+    addMessage(message)
+  }
+}
+
+// 监听窗口大小变化
+let resizeObserver = null
+
+function setupResizeObserver() {
+  if (!messageListRef.value) return
+
+  resizeObserver = new ResizeObserver(() => {
+    // 如果之前在底部，窗口大小变化后也要保持在底部
+    if (isAtBottom.value) {
+      scrollToBottom()
+    }
+  })
+
+  resizeObserver.observe(messageListRef.value)
+}
+
 // 组件挂载时加载消息
 onMounted(() => {
   if (props.subChannelId) {
     loadMessages()
+  }
+  // 监听全局消息事件
+  window.addEventListener('new-message', handleGlobalMessage)
+  // 设置 ResizeObserver
+  nextTick(() => {
+    setupResizeObserver()
+  })
+})
+
+// 组件卸载时移除监听
+onUnmounted(() => {
+  window.removeEventListener('new-message', handleGlobalMessage)
+  if (resizeObserver) {
+    resizeObserver.disconnect()
   }
 })
 
