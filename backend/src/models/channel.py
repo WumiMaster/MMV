@@ -20,6 +20,7 @@ class Channel(Base):
     name = Column(String(100), nullable=False, comment="频道名称")
     channel_id = Column(String(50), unique=True, index=True, nullable=False, comment="频道ID（自定义或自动生成）")
     description = Column(String(500), nullable=True, comment="频道描述")
+    avatar = Column(String(255), nullable=True, comment="频道头像文件路径")
     message_retention_days = Column(Integer, default=30, comment="消息留存天数，默认30天")
     creator_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="创建者ID")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")

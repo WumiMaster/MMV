@@ -64,8 +64,33 @@
     />
 
     <!-- 图片预览 -->
-    <div v-if="previewUrl" class="image-preview-overlay" @click="previewUrl = null">
-      <img :src="previewUrl" alt="预览" />
+    <div v-if="previewUrl" class="image-preview-overlay" @click.self="closePreview">
+      <div class="preview-controls">
+        <button class="preview-btn" @click="zoomIn" title="放大">+</button>
+        <span class="zoom-level">{{ Math.round(zoomLevel * 100) }}%</span>
+        <button class="preview-btn" @click="zoomOut" title="缩小">-</button>
+        <button class="preview-btn" @click="resetZoom" title="重置">↺</button>
+        <button class="preview-btn close" @click="closePreview" title="关闭">✕</button>
+      </div>
+      <div
+        class="preview-image-container"
+        @wheel.prevent="handleWheel"
+        @mousedown="startDrag"
+        @mousemove="onDrag"
+        @mouseup="endDrag"
+        @mouseleave="endDrag"
+        :style="{ cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }"
+      >
+        <img
+          ref="previewImageRef"
+          :src="previewUrl"
+          alt="预览"
+          :style="{
+            transform: `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoomLevel})`
+          }"
+          @load="onImageLoad"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -104,6 +129,19 @@ const hasMore = ref(false)
 const page = ref(1)
 const messageListRef = ref(null)
 const previewUrl = ref(null)
+const previewImageRef = ref(null)
+
+// 图片预览相关
+const zoomLevel = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const transformOriginX = ref(0)
+const transformOriginY = ref(0)
+const isDragging = ref(false)
+const dragStartX = ref(0)
+const dragStartY = ref(0)
+const dragStartPanX = ref(0)
+const dragStartPanY = ref(0)
 
 // 新消息提示相关
 const isAtBottom = ref(true)
@@ -211,7 +249,18 @@ function addMessage(message) {
 
 // 格式化时间
 function formatTime(timeStr) {
-  const date = new Date(timeStr)
+  if (!timeStr) return ''
+
+  // 解析 ISO 格式时间（带时区）
+  let date
+  if (timeStr.includes('T')) {
+    // ISO 8601 格式
+    date = new Date(timeStr)
+  } else {
+    // 兼容旧格式（无时区，假设是 UTC）
+    date = new Date(timeStr + 'Z')
+  }
+
   const now = new Date()
   const diff = now - date
 
@@ -234,6 +283,103 @@ function formatTime(timeStr) {
 // 预览图片
 function previewImage(url) {
   previewUrl.value = url
+  // 延迟重置，等待图片加载
+  nextTick(() => {
+    zoomLevel.value = 1
+    panX.value = 0
+    panY.value = 0
+  })
+}
+
+// 关闭预览
+function closePreview() {
+  previewUrl.value = null
+  zoomLevel.value = 1
+  panX.value = 0
+  panY.value = 0
+}
+
+// 图片加载完成
+function onImageLoad() {
+  // 图片加载完成后，重置为默认状态
+  zoomLevel.value = 1
+  panX.value = 0
+  panY.value = 0
+}
+
+// 鼠标滚轮缩放（以鼠标位置为中心）
+function handleWheel(event) {
+  const container = event.currentTarget
+  const rect = container.getBoundingClientRect()
+  const mouseX = event.clientX - rect.left
+  const mouseY = event.clientY - rect.top
+
+  // 图片中心在容器中的位置
+  const centerX = rect.width / 2 + panX.value
+  const centerY = rect.height / 2 + panY.value
+
+  // 鼠标相对于图片中心的偏移
+  const offsetX = mouseX - centerX
+  const offsetY = mouseY - centerY
+
+  const oldZoom = zoomLevel.value
+  let newZoom
+  if (event.deltaY < 0) {
+    newZoom = Math.min(5, oldZoom + 0.2)
+  } else {
+    newZoom = Math.max(0.2, oldZoom - 0.2)
+  }
+
+  // 缩放比例
+  const scale = newZoom / oldZoom
+
+  // 调整平移，使鼠标位置保持不变
+  panX.value = mouseX - rect.width / 2 - (mouseX - rect.width / 2 - panX.value) * scale
+  panY.value = mouseY - rect.height / 2 - (mouseY - rect.height / 2 - panY.value) * scale
+
+  zoomLevel.value = newZoom
+}
+
+// 拖拽功能
+function startDrag(event) {
+  if (zoomLevel.value <= 1) return
+  isDragging.value = true
+  dragStartX.value = event.clientX
+  dragStartY.value = event.clientY
+  dragStartPanX.value = panX.value
+  dragStartPanY.value = panY.value
+  event.preventDefault()
+}
+
+function onDrag(event) {
+  if (!isDragging.value) return
+  const dx = event.clientX - dragStartX.value
+  const dy = event.clientY - dragStartY.value
+  panX.value = dragStartPanX.value + dx
+  panY.value = dragStartPanY.value + dy
+}
+
+function endDrag() {
+  isDragging.value = false
+}
+
+// 按钮缩放（以容器中心为中心）
+function zoomIn() {
+  const oldZoom = zoomLevel.value
+  const newZoom = Math.min(5, oldZoom + 0.25)
+  zoomLevel.value = newZoom
+}
+
+function zoomOut() {
+  const oldZoom = zoomLevel.value
+  const newZoom = Math.max(0.2, oldZoom - 0.25)
+  zoomLevel.value = newZoom
+}
+
+function resetZoom() {
+  zoomLevel.value = 1
+  panX.value = 0
+  panY.value = 0
 }
 
 // 当子频道切换时重新加载消息
@@ -431,18 +577,82 @@ defineExpose({
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  cursor: pointer;
 }
 
-.image-preview-overlay img {
-  max-width: 90%;
-  max-height: 90%;
+.preview-controls {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 8px 16px;
+  border-radius: 24px;
+  z-index: 2001;
+}
+
+.preview-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.preview-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.preview-btn.close {
+  margin-left: 8px;
+  background: rgba(255, 107, 107, 0.3);
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+.preview-btn.close:hover {
+  background: rgba(255, 107, 107, 0.5);
+}
+
+.zoom-level {
+  color: white;
+  font-size: 14px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.preview-image-container {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.preview-image-container img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: 85vw;
+  max-height: 85vh;
   object-fit: contain;
+  border-radius: 8px;
+  transition: transform 0.05s ease-out;
+  will-change: transform;
 }
 
 /* 新消息提示按钮 */

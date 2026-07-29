@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime, timezone
 import os
 import uuid
 from ..config.database import get_db
@@ -137,7 +138,7 @@ async def send_message(
         ),
         content=message.content,
         image_url=message.image_url,
-        created_at=str(message.created_at)
+        created_at=message.created_at.replace(tzinfo=timezone.utc).isoformat() if message.created_at else datetime.now(timezone.utc).isoformat()
     )
 
     # 通过 WebSocket 广播消息到频道
@@ -155,7 +156,7 @@ async def send_message(
             },
             "content": message.content,
             "image_url": message.image_url,
-            "created_at": str(message.created_at)
+            "created_at": message.created_at.isoformat() if message.created_at else None
         }
     })
 

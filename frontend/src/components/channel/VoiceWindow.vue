@@ -832,6 +832,11 @@ onUnmounted(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
   leaveVoice()
 })
+
+// 暴露给父组件
+defineExpose({
+  localStream
+})
 </script>
 
 <style scoped>

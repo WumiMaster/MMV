@@ -3,10 +3,11 @@
 处理频道和子频道的增删改查
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
+import os
 import uuid
 from ..config.database import get_db
 from ..models.user import User
@@ -14,6 +15,10 @@ from ..models.channel import Channel, SubChannel
 from ..middlewares.auth import get_current_admin
 
 router = APIRouter(prefix="/api/admin", tags=["管理员-频道管理"])
+
+# 频道头像上传目录
+UPLOAD_DIR = "uploads/channel_avatars"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 # ==================== 请求/响应数据结构 ====================
@@ -29,6 +34,7 @@ class CreateChannelRequest(BaseModel):
 class UpdateChannelRequest(BaseModel):
     """更新频道请求"""
     name: Optional[str] = None
+    channel_id: Optional[str] = None
     description: Optional[str] = None
     message_retention_days: Optional[int] = None
 
@@ -39,6 +45,7 @@ class ChannelResponse(BaseModel):
     name: str
     channel_id: str
     description: Optional[str]
+    avatar: Optional[str]
     message_retention_days: int
     creator_id: int
     created_at: str
@@ -123,6 +130,7 @@ async def create_channel(
         name=channel.name,
         channel_id=channel.channel_id,
         description=channel.description,
+        avatar=channel.avatar,
         message_retention_days=channel.message_retention_days,
         creator_id=channel.creator_id,
         created_at=str(channel.created_at),
@@ -156,6 +164,7 @@ async def get_channels(
             name=ch.name,
             channel_id=ch.channel_id,
             description=ch.description,
+            avatar=ch.avatar,
             message_retention_days=ch.message_retention_days,
             creator_id=ch.creator_id,
             created_at=str(ch.created_at),
@@ -189,6 +198,16 @@ async def update_channel(
             detail="频道不存在"
         )
 
+    # 检查频道ID唯一性
+    if request.channel_id is not None and request.channel_id != channel.channel_id:
+        existing = db.query(Channel).filter(Channel.channel_id == request.channel_id).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="频道ID已存在，请使用其他ID"
+            )
+        channel.channel_id = request.channel_id
+
     if request.name is not None:
         channel.name = request.name
     if request.description is not None:
@@ -207,12 +226,68 @@ async def update_channel(
         name=channel.name,
         channel_id=channel.channel_id,
         description=channel.description,
+        avatar=channel.avatar,
         message_retention_days=channel.message_retention_days,
         creator_id=channel.creator_id,
         created_at=str(channel.created_at),
         member_count=member_count,
         sub_channel_count=sub_channel_count
     )
+
+
+@router.post("/channels/{channel_id}/avatar")
+async def upload_channel_avatar(
+    channel_id: int,
+    file: UploadFile = File(...),
+    current_admin: User = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    上传频道头像
+    需要管理员权限
+    """
+    channel = db.query(Channel).filter(Channel.id == channel_id).first()
+    if not channel:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="频道不存在"
+        )
+
+    # 验证文件类型（允许常见图片格式）
+    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml", "application/octet-stream"]
+    if file.content_type not in allowed_types:
+        # 如果 content_type 不匹配，检查文件扩展名
+        allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"]
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"不支持的文件格式: {file.content_type}"
+            )
+
+    # 验证文件大小（最大 5MB）
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="文件大小不能超过 5MB"
+        )
+
+    # 生成唯一文件名
+    file_ext = os.path.splitext(file.filename)[1]
+    filename = f"channel_{channel_id}_{uuid.uuid4()}{file_ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+
+    # 保存文件
+    with open(filepath, "wb") as f:
+        f.write(contents)
+
+    # 更新频道头像
+    avatar_url = f"/uploads/channel_avatars/{filename}"
+    channel.avatar = avatar_url
+    db.commit()
+
+    return {"avatar": avatar_url}
 
 
 @router.delete("/channels/{channel_id}")

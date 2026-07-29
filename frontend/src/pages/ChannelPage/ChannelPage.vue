@@ -11,7 +11,10 @@
           :class="{ active: currentChannel?.id === channel.id }"
           @click="selectChannel(channel)"
         >
-          <div class="channel-icon">{{ channel.name.charAt(0) }}</div>
+          <div class="channel-icon">
+            <img v-if="channel.avatar" :src="channel.avatar + '?t=' + Date.now()" alt="频道头像" class="channel-avatar-img" />
+            <span v-else>{{ channel.name.charAt(0) }}</span>
+          </div>
           <span class="channel-name">{{ channel.name }}</span>
         </div>
         <button class="join-channel-btn" @click="showJoinModal = true" title="加入频道">
@@ -76,12 +79,18 @@
           />
         </div>
         <!-- 语音子频道窗口 -->
-        <div v-else-if="currentSubChannel && currentSubChannel.type === 'voice'" class="content-wrapper animate-in" :key="'voice-' + currentSubChannel.id">
+        <div v-else-if="currentSubChannel && currentSubChannel.type === 'voice'" class="content-wrapper animate-in voice-content-wrapper" :key="'voice-' + currentSubChannel.id">
           <VoiceWindow
+            ref="voiceWindowRef"
             :sub-channel-id="currentSubChannel.id"
             :sub-channel-name="currentSubChannel.name"
             :channel-id="currentChannel?.id"
             @close="handleVoiceClose"
+          />
+          <!-- 音频电平指示器 -->
+          <AudioLevelIndicator
+            :show="true"
+            :stream="voiceStream"
           />
         </div>
         <!-- 空状态 -->
@@ -126,7 +135,7 @@
  * 顶部导航栏显示频道列表，下方左侧显示子频道列表，右侧显示聊天窗口
  */
 
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import api from '../../api'
@@ -136,6 +145,7 @@ import VoiceWindow from '../../components/channel/VoiceWindow.vue'
 import JoinChannelModal from '../../components/channel/JoinChannelModal.vue'
 import SettingsWindow from '../../components/channel/SettingsWindow.vue'
 import NetworkMonitor from '../../components/common/NetworkMonitor.vue'
+import AudioLevelIndicator from '../../components/common/AudioLevelIndicator.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -145,6 +155,8 @@ const myChannels = ref([])
 const currentChannel = ref(null)
 const subChannels = ref([])
 const currentSubChannel = ref(null)
+const voiceWindowRef = ref(null)
+const voiceStream = ref(null)
 
 // UI 状态
 const showJoinModal = ref(false)
@@ -226,8 +238,26 @@ function handleSendMessage(message) {
 
 // 语音窗口关闭
 function handleVoiceClose() {
+  voiceStream.value = null
   currentSubChannel.value = null
 }
+
+// 获取语音流（用于音频指示器）
+function updateVoiceStream() {
+  if (voiceWindowRef.value && voiceWindowRef.value.localStream) {
+    voiceStream.value = voiceWindowRef.value.localStream
+  }
+}
+
+// 监听子频道变化，更新语音流
+watch(currentSubChannel, (newVal) => {
+  if (newVal && newVal.type === 'voice') {
+    // 延迟获取流，等待 VoiceWindow 初始化
+    setTimeout(updateVoiceStream, 1000)
+  } else {
+    voiceStream.value = null
+  }
+})
 
 // 连接 WebSocket
 function connectWebSocket(channelId) {
@@ -419,6 +449,14 @@ onMounted(() => {
   font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.channel-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .nav-channel-item .channel-name {
@@ -649,6 +687,16 @@ onMounted(() => {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
+}
+
+.voice-content-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.voice-content-wrapper > :first-child {
+  flex: 1;
+  min-height: 0;
 }
 
 .animate-in {

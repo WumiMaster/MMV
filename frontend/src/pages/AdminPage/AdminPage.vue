@@ -182,31 +182,49 @@
           <div class="modal-header">
             <div class="modal-title">编辑用户</div>
             <button class="modal-close" @click="showEditModal = false">×</button>
-        </div>
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">昵称</label>
-          <input v-model="editForm.nickname" type="text" class="glass-input" placeholder="对外显示的昵称" />
-        </div>
+          <!-- 头像上传（居中） -->
+          <div class="avatar-upload" @click="triggerEditAvatarInput">
+            <div v-if="editAvatarPreview" class="avatar-preview">
+              <img :src="editAvatarPreview" alt="头像预览" />
+            </div>
+            <div v-else-if="editForm.avatar" class="avatar-preview">
+              <img :src="editForm.avatar" alt="当前头像" />
+            </div>
+            <div v-else class="avatar-placeholder">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <div>点击上传头像</div>
+            </div>
+            <input ref="editAvatarInput" type="file" accept="image/*" style="display: none" @change="handleEditAvatarChange" />
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">新密码（留空则不修改）</label>
-          <input v-model="editForm.password" type="password" class="glass-input" placeholder="请输入新密码" />
-        </div>
+          <div class="form-group">
+            <label class="form-label">昵称</label>
+            <input v-model="editForm.nickname" type="text" class="glass-input" placeholder="对外显示的昵称" />
+          </div>
 
-        <div class="form-group">
-          <label class="form-label">角色</label>
-          <select v-model="editForm.role" class="glass-input">
-            <option value="user">普通用户</option>
-            <option value="admin">管理员</option>
-          </select>
-        </div>
+          <div class="form-group">
+            <label class="form-label">新密码（留空则不修改）</label>
+            <input v-model="editForm.password" type="password" class="glass-input" placeholder="请输入新密码" />
+          </div>
 
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="showEditModal = false">取消</button>
-          <button class="btn-primary" @click="handleUpdateUser">确认</button>
+          <div class="form-group">
+            <label class="form-label">角色</label>
+            <select v-model="editForm.role" class="glass-input">
+              <option value="user">普通用户</option>
+              <option value="admin">管理员</option>
+            </select>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="showEditModal = false">取消</button>
+            <button class="btn-primary" @click="handleUpdateUser">确认</button>
+          </div>
         </div>
-      </div>
       </div>
     </Teleport>
 
@@ -293,13 +311,18 @@ const showCannotDeleteSelfModal = ref(false)
 
 // 表单数据
 const createForm = ref({ username: '', password: '', nickname: '' })
-const editForm = ref({ id: null, nickname: '', password: '', role: 'user' })
+const editForm = ref({ id: null, nickname: '', password: '', role: 'user', avatar: null })
 const deleteTarget = ref(null)
 
-// 头像上传
+// 创建用户头像
 const createAvatarInput = ref(null)
 const createAvatarPreview = ref(null)
 const createAvatarFile = ref(null)
+
+// 编辑用户头像
+const editAvatarInput = ref(null)
+const editAvatarPreview = ref(null)
+const editAvatarFile = ref(null)
 
 // Toast 提示
 const toast = ref({ show: false, message: '', type: 'success' })
@@ -346,6 +369,28 @@ function handleCreateAvatarChange(event) {
   reader.readAsDataURL(file)
 }
 
+// 编辑用户头像
+function triggerEditAvatarInput() {
+  editAvatarInput.value?.click()
+}
+
+function handleEditAvatarChange(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (!file.type.startsWith('image/')) {
+    showToast('请选择图片文件', 'error')
+    return
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('图片大小不能超过 5MB', 'error')
+    return
+  }
+  editAvatarFile.value = file
+  const reader = new FileReader()
+  reader.onload = (e) => { editAvatarPreview.value = e.target.result }
+  reader.readAsDataURL(file)
+}
+
 // 创建用户
 async function handleCreateUser() {
   if (!createForm.value.username || !createForm.value.password || !createForm.value.nickname) {
@@ -375,7 +420,9 @@ async function handleCreateUser() {
 
 // 编辑用户
 function editUser(user) {
-  editForm.value = { id: user.id, nickname: user.nickname, password: '', role: user.role }
+  editForm.value = { id: user.id, nickname: user.nickname, password: '', role: user.role, avatar: user.avatar }
+  editAvatarFile.value = null
+  editAvatarPreview.value = null
   showEditModal.value = true
 }
 
@@ -385,11 +432,33 @@ async function handleUpdateUser() {
     const updateData = { nickname: editForm.value.nickname, role: editForm.value.role }
     if (editForm.value.password) updateData.password = editForm.value.password
     await api.put(`/api/admin/users/${editForm.value.id}`, updateData)
+
+    // 如果有新头像，上传头像
+    if (editAvatarFile.value) {
+      await uploadUserAvatar(editForm.value.id, editAvatarFile.value)
+    }
+
     showToast('用户信息已更新')
     showEditModal.value = false
+    editAvatarFile.value = null
+    editAvatarPreview.value = null
     loadUsers(currentPage.value)
   } catch (error) {
     showToast(error.response?.data?.detail || '更新失败', 'error')
+  }
+}
+
+// 上传用户头像
+async function uploadUserAvatar(userId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    await api.post(`/api/admin/users/${userId}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  } catch (error) {
+    console.error('头像上传失败:', error)
   }
 }
 

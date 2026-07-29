@@ -13,6 +13,7 @@
       <table class="channel-table">
         <thead>
           <tr>
+            <th>头像</th>
             <th>频道名称</th>
             <th>频道 ID</th>
             <th>成员数</th>
@@ -23,6 +24,14 @@
         </thead>
         <tbody>
           <tr v-for="channel in channels" :key="channel.id">
+            <td>
+              <div class="channel-avatar">
+                <img v-if="channel.avatar" :src="channel.avatar + '?t=' + Date.now()" alt="频道头像" />
+                <div v-else class="channel-avatar-placeholder">
+                  {{ channel.name.charAt(0) }}
+                </div>
+              </div>
+            </td>
             <td>{{ channel.name }}</td>
             <td>
               <span class="channel-id-badge">{{ channel.channel_id }}</span>
@@ -56,6 +65,21 @@
           <div class="modal-header">
             <div class="modal-title">创建频道</div>
             <button class="modal-close" @click="showCreateChannelModal = false">×</button>
+          </div>
+
+          <!-- 频道头像上传（居中） -->
+          <div class="avatar-upload" @click="triggerCreateAvatarInput">
+            <div v-if="createAvatarPreview" class="avatar-preview">
+              <img :src="createAvatarPreview" alt="头像预览" />
+            </div>
+            <div v-else class="avatar-placeholder">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <div>点击上传头像</div>
+            </div>
+            <input ref="createAvatarInput" type="file" accept="image/*" style="display: none" @change="handleCreateAvatarChange" />
           </div>
 
           <div class="form-group">
@@ -95,9 +119,32 @@
             <button class="modal-close" @click="showEditChannelModal = false">×</button>
           </div>
 
+          <!-- 频道头像上传（居中） -->
+          <div class="avatar-upload" @click="triggerEditAvatarInput">
+            <div v-if="editAvatarPreview" class="avatar-preview">
+              <img :src="editAvatarPreview" alt="头像预览" />
+            </div>
+            <div v-else-if="editChannelForm.avatar" class="avatar-preview">
+              <img :src="editChannelForm.avatar" alt="当前头像" />
+            </div>
+            <div v-else class="avatar-placeholder">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <div>点击上传头像</div>
+            </div>
+            <input ref="editAvatarInput" type="file" accept="image/*" style="display: none" @change="handleEditAvatarChange" />
+          </div>
+
           <div class="form-group">
             <label class="form-label">频道名称</label>
             <input v-model="editChannelForm.name" type="text" class="glass-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">频道 ID</label>
+            <input v-model="editChannelForm.channel_id" type="text" class="glass-input" placeholder="自定义频道ID" />
           </div>
 
           <div class="form-group">
@@ -241,6 +288,14 @@ const showSubChannelModal = ref(false)
 const showCreateSubChannelModal = ref(false)
 const showDeleteModal = ref(false)
 
+// 头像相关
+const createAvatarInput = ref(null)
+const createAvatarFile = ref(null)
+const createAvatarPreview = ref(null)
+const editAvatarInput = ref(null)
+const editAvatarFile = ref(null)
+const editAvatarPreview = ref(null)
+
 // 表单数据
 const channelForm = ref({
   name: '',
@@ -253,6 +308,7 @@ const editChannelForm = ref({
   id: null,
   name: '',
   description: '',
+  avatar: null,
   message_retention_days: 30
 })
 
@@ -280,6 +336,47 @@ function showToast(message, type = 'success') {
   }, 2000)
 }
 
+// 头像处理函数
+function triggerCreateAvatarInput() {
+  createAvatarInput.value?.click()
+}
+
+function handleCreateAvatarChange(event) {
+  const file = event.target.files[0]
+  if (file) {
+    createAvatarFile.value = file
+    createAvatarPreview.value = URL.createObjectURL(file)
+  }
+}
+
+function triggerEditAvatarInput() {
+  editAvatarInput.value?.click()
+}
+
+function handleEditAvatarChange(event) {
+  const file = event.target.files[0]
+  if (file) {
+    editAvatarFile.value = file
+    editAvatarPreview.value = URL.createObjectURL(file)
+  }
+}
+
+// 上传频道头像
+async function uploadChannelAvatar(channelId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const response = await api.post(`/api/admin/channels/${channelId}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data.avatar
+  } catch (error) {
+    console.error('头像上传失败:', error)
+    return null
+  }
+}
+
 // 加载频道列表
 async function loadChannels(page = 1) {
   try {
@@ -299,10 +396,19 @@ async function handleCreateChannel() {
   if (!channelForm.value.name) return
 
   try {
-    await api.post('/api/admin/channels', channelForm.value)
+    const response = await api.post('/api/admin/channels', channelForm.value)
+    const channelId = response.data.id
+
+    // 如果有头像，上传头像
+    if (createAvatarFile.value) {
+      await uploadChannelAvatar(channelId, createAvatarFile.value)
+    }
+
     showToast('频道创建成功')
     showCreateChannelModal.value = false
     channelForm.value = { name: '', channel_id: '', description: '', message_retention_days: 30 }
+    createAvatarFile.value = null
+    createAvatarPreview.value = null
     loadChannels(currentPage.value)
   } catch (error) {
     showToast(error.response?.data?.detail || '创建失败', 'error')
@@ -314,9 +420,13 @@ function editChannel(channel) {
   editChannelForm.value = {
     id: channel.id,
     name: channel.name,
+    channel_id: channel.channel_id,
     description: channel.description || '',
+    avatar: channel.avatar,
     message_retention_days: channel.message_retention_days
   }
+  editAvatarFile.value = null
+  editAvatarPreview.value = null
   showEditChannelModal.value = true
 }
 
@@ -325,11 +435,20 @@ async function handleUpdateChannel() {
   try {
     await api.put(`/api/admin/channels/${editChannelForm.value.id}`, {
       name: editChannelForm.value.name,
+      channel_id: editChannelForm.value.channel_id,
       description: editChannelForm.value.description,
       message_retention_days: editChannelForm.value.message_retention_days
     })
+
+    // 如果有新头像，上传头像
+    if (editAvatarFile.value) {
+      await uploadChannelAvatar(editChannelForm.value.id, editAvatarFile.value)
+    }
+
     showToast('频道信息已更新')
     showEditChannelModal.value = false
+    editAvatarFile.value = null
+    editAvatarPreview.value = null
     loadChannels(currentPage.value)
   } catch (error) {
     showToast(error.response?.data?.detail || '更新失败', 'error')
@@ -505,6 +624,36 @@ onMounted(() => {
   padding: 4px 10px;
   background: rgba(126, 215, 167, 0.2);
   border-radius: 8px;
+}
+
+/* 频道头像 */
+.channel-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.channel-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.channel-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF9EB5, #7ED7A7);
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.channel-id-badge {
   font-size: 13px;
   font-family: monospace;
   color: #2b8a3e;
@@ -767,6 +916,54 @@ onMounted(() => {
   font-size: 14px;
   background: rgba(255, 245, 250, 0.3);
   border-radius: 10px;
+}
+
+/* 头像上传（居中） */
+.avatar-upload {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px dashed rgba(200, 190, 198, 0.6);
+  background: rgba(255, 245, 250, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  margin: 0 auto 20px;
+}
+
+.avatar-upload:hover {
+  border-color: #7ED7A7;
+  background: rgba(255, 240, 248, 0.7);
+  transform: scale(1.05);
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.upload-icon {
+  width: 28px;
+  height: 28px;
+  color: #aaa;
 }
 
 .sub-channel-item {

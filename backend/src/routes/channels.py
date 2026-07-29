@@ -52,6 +52,7 @@ class MyChannelResponse(BaseModel):
     name: str
     channel_id: str
     description: Optional[str]
+    avatar: Optional[str]
     member_count: int
     sub_channel_count: int
 
@@ -138,6 +139,7 @@ async def get_my_channels(
             name=channel.name,
             channel_id=channel.channel_id,
             description=channel.description,
+            avatar=channel.avatar,
             member_count=len(channel.members),
             sub_channel_count=len(channel.sub_channels)
         ))
