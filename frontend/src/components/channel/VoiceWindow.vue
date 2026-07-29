@@ -1,6 +1,6 @@
 <template>
   <!-- 语音频道窗口 -->
-  <div class="voice-window">
+  <div class="voice-window" @click="unlockAudio">
     <div class="voice-header">
       <div class="voice-title">
         <svg class="voice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -290,6 +290,69 @@ function startRefreshingUsers() {
   refreshUsersTimer = setInterval(fetchVoiceUsers, 2000) // 每2秒刷新
 }
 
+// 网络速度监控
+let lastBytesSent = 0
+let lastBytesReceived = 0
+let lastStatsTime = 0
+let networkStatsTimer = null
+
+async function updateNetworkStats() {
+  const connections = Object.values(peerConnections.value)
+  if (connections.length === 0) return
+
+  let totalBytesSent = 0
+  let totalBytesReceived = 0
+  let now = Date.now()
+
+  for (const conn of connections) {
+    if (conn.pc && conn.pc.connectionState === 'connected') {
+      try {
+        const stats = await conn.pc.getStats()
+        stats.forEach(report => {
+          if (report.type === 'transport') {
+            totalBytesSent += report.bytesSent || 0
+            totalBytesReceived += report.bytesReceived || 0
+          }
+        })
+      } catch (e) {
+        // 忽略错误
+      }
+    }
+  }
+
+  // 计算速度
+  if (lastStatsTime > 0 && now > lastStatsTime) {
+    const timeDiff = (now - lastStatsTime) / 1000
+    const sentDiff = totalBytesSent - lastBytesSent
+    const receivedDiff = totalBytesReceived - lastBytesReceived
+
+    if (timeDiff > 0) {
+      // 更新全局状态
+      window.__networkStats = {
+        uploadSpeed: sentDiff / timeDiff,
+        downloadSpeed: receivedDiff / timeDiff
+      }
+    }
+  }
+
+  lastBytesSent = totalBytesSent
+  lastBytesReceived = totalBytesReceived
+  lastStatsTime = now
+}
+
+function startNetworkMonitoring() {
+  updateNetworkStats()
+  networkStatsTimer = setInterval(updateNetworkStats, 1000)
+}
+
+function stopNetworkMonitoring() {
+  if (networkStatsTimer) {
+    clearInterval(networkStatsTimer)
+    networkStatsTimer = null
+  }
+  window.__networkStats = { uploadSpeed: 0, downloadSpeed: 0 }
+}
+
 // 加入语音房间
 async function joinVoice() {
   try {
@@ -298,6 +361,10 @@ async function joinVoice() {
 
     // 创建音频分析器（用于说话检测）
     audioContext = new (window.AudioContext || window.webkitAudioContext)()
+    // 确保音频上下文是运行状态
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume()
+    }
     const source = audioContext.createMediaStreamSource(localStream)
     analyser = audioContext.createAnalyser()
     analyser.fftSize = 256
@@ -311,6 +378,9 @@ async function joinVoice() {
 
     // 开始刷新用户列表（会自动添加当前用户）
     startRefreshingUsers()
+
+    // 开始网络监控
+    startNetworkMonitoring()
 
     // 播放加入提示音
     playNotificationSound('join')
@@ -456,6 +526,11 @@ async function createPeerConnection(targetUserId, isInitiator) {
     remoteAudio.volume = volume.value / 100
     remoteAudio.autoplay = true
 
+    // 将音频元素添加到 DOM（某些浏览器需要）
+    remoteAudio.style.display = 'none'
+    remoteAudio.dataset.userId = targetUserId
+    document.body.appendChild(remoteAudio)
+
     // 尝试播放音频
     const playPromise = remoteAudio.play()
     if (playPromise !== undefined) {
@@ -555,6 +630,10 @@ function closePeerConnection(userId) {
     if (conn.audio) {
       conn.audio.pause()
       conn.audio.srcObject = null
+      // 从 DOM 中移除音频元素
+      if (conn.audio.parentNode) {
+        conn.audio.parentNode.removeChild(conn.audio)
+      }
     }
     delete peerConnections.value[userId]
   }
@@ -669,9 +748,21 @@ function leaveVoice() {
     clearInterval(refreshUsersTimer)
   }
 
+  // 停止网络监控
+  stopNetworkMonitoring()
+
   // 关闭所有 P2P 连接
   Object.keys(peerConnections.value).forEach(userId => {
     closePeerConnection(userId)
+  })
+
+  // 移除所有远程音频元素
+  document.querySelectorAll('audio[data-user-id]').forEach(el => {
+    el.pause()
+    el.srcObject = null
+    if (el.parentNode) {
+      el.parentNode.removeChild(el)
+    }
   })
 
   // 停止本地音频流
@@ -704,6 +795,24 @@ function leaveVoice() {
   }
 
   emit('close')
+}
+
+// 解锁音频播放（需要用户交互）
+function unlockAudio() {
+  // 恢复音频上下文
+  if (audioContext && audioContext.state === 'suspended') {
+    audioContext.resume()
+  }
+  if (notificationAudioContext && notificationAudioContext.state === 'suspended') {
+    notificationAudioContext.resume()
+  }
+
+  // 尝试播放所有远程音频
+  Object.values(peerConnections.value).forEach(conn => {
+    if (conn.audio && conn.audio.paused) {
+      conn.audio.play().catch(() => {})
+    }
+  })
 }
 
 // 页面关闭时清理资源

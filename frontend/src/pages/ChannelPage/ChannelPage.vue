@@ -110,6 +110,9 @@
       @close="showSettings = false"
     />
 
+    <!-- 网络监控 -->
+    <NetworkMonitor />
+
     <!-- Toast 提示 -->
     <div v-if="showToast" class="toast" :class="{ show: showToast }">
       {{ toastMessage }}
@@ -132,6 +135,7 @@ import ChatWindow from '../../components/channel/ChatWindow.vue'
 import VoiceWindow from '../../components/channel/VoiceWindow.vue'
 import JoinChannelModal from '../../components/channel/JoinChannelModal.vue'
 import SettingsWindow from '../../components/channel/SettingsWindow.vue'
+import NetworkMonitor from '../../components/common/NetworkMonitor.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
