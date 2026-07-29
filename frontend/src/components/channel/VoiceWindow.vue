@@ -154,9 +154,59 @@ let audioContext = null
 let analyser = null
 let speakingDetectionTimer = null
 let refreshUsersTimer = null
+let reconnectTimer = null
+let reconnectAttempts = 0
+const MAX_RECONNECT_ATTEMPTS = 3
 
 // P2P 连接管理 {user_id: RTCPeerConnection}
 const peerConnections = ref({})
+
+// 提示音配置
+const NOTIFICATION_SOUNDS = {
+  join: { name: '清脆提示', freq: [800, 1000], duration: 0.15, type: 'sine' },
+  leave: { name: '轻柔下降', freq: [600, 500, 400, 300], duration: 0.08, type: 'sine' },
+  userJoin: { name: '清脆双音', freq: [600, 800], duration: 0.1, type: 'sine' },
+  userLeave: { name: '低沉提示', freq: [400, 300], duration: 0.12, type: 'sine' }
+}
+
+// 播放提示音
+let notificationAudioContext = null
+function playNotificationSound(type) {
+  try {
+    if (!notificationAudioContext) {
+      notificationAudioContext = new (window.AudioContext || window.webkitAudioContext)()
+    }
+
+    const sound = NOTIFICATION_SOUNDS[type]
+    if (!sound) return
+
+    const now = notificationAudioContext.currentTime
+    const stepDuration = sound.duration
+
+    sound.freq.forEach((freq, index) => {
+      const oscillator = notificationAudioContext.createOscillator()
+      const gainNode = notificationAudioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(notificationAudioContext.destination)
+
+      oscillator.type = sound.type
+      oscillator.frequency.value = freq
+
+      const startTime = now + (index * stepDuration)
+      gainNode.gain.setValueAtTime(0.2, startTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + stepDuration)
+
+      oscillator.start(startTime)
+      oscillator.stop(startTime + stepDuration)
+    })
+  } catch (e) {
+    console.error('播放提示音失败:', e)
+  }
+}
+
+// 记录上一次的用户列表（用于检测用户加入/离开）
+let previousUserIds = new Set()
 
 // 定期刷新语音房间用户
 async function fetchVoiceUsers() {
@@ -192,7 +242,30 @@ async function fetchVoiceUsers() {
     }
 
     // 转换为数组
+    const newUserIds = new Set(userMap.keys())
+
+    // 检测其他用户的加入和离开（排除当前用户）
+    if (previousUserIds.size > 0) {
+      // 检测新加入的用户
+      for (const userId of newUserIds) {
+        if (userId !== currentUserId && !previousUserIds.has(userId)) {
+          playNotificationSound('userJoin')
+          break
+        }
+      }
+
+      // 检测离开的用户
+      for (const userId of previousUserIds) {
+        if (userId !== currentUserId && !newUserIds.has(userId)) {
+          playNotificationSound('userLeave')
+          break
+        }
+      }
+    }
+
+    // 更新用户列表和记录
     voiceUsers.value = Array.from(userMap.values())
+    previousUserIds = newUserIds
 
     console.log('当前语音用户:', voiceUsers.value.length, '人')
 
@@ -239,6 +312,9 @@ async function joinVoice() {
     // 开始刷新用户列表（会自动添加当前用户）
     startRefreshingUsers()
 
+    // 播放加入提示音
+    playNotificationSound('join')
+
   } catch (error) {
     console.error('获取麦克风失败:', error)
     alert('无法获取麦克风权限，请检查浏览器设置')
@@ -257,6 +333,7 @@ function connectSignaling() {
 
   ws.onopen = () => {
     console.log('语音信令连接成功，WebSocket URL:', wsUrl)
+    reconnectAttempts = 0 // 连接成功，重置重连次数
   }
 
   ws.onmessage = (event) => {
@@ -271,6 +348,15 @@ function connectSignaling() {
 
   ws.onclose = (event) => {
     console.log('语音信令连接关闭，代码:', event.code, '原因:', event.reason)
+    // 尝试重连（只有在正常关闭时才重连，错误关闭由 onerror 处理）
+    if (event.code === 1000 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      reconnectAttempts++
+      const delay = 2000 * reconnectAttempts // 2秒、4秒、6秒
+      console.log(`${delay / 1000}秒后尝试第${reconnectAttempts}次重连语音信令...`)
+      reconnectTimer = setTimeout(() => {
+        connectSignaling()
+      }, delay)
+    }
   }
 
   ws.onerror = (error) => {
@@ -564,6 +650,15 @@ function updateVolume() {
 
 // 退出语音
 function leaveVoice() {
+  // 播放退出提示音
+  playNotificationSound('leave')
+
+  // 清除重连定时器
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+
   // 停止说话检测
   if (speakingDetectionTimer) {
     cancelAnimationFrame(speakingDetectionTimer)
@@ -591,6 +686,17 @@ function leaveVoice() {
     audioContext = null
   }
 
+  // 延迟关闭提示音上下文，让声音播放完
+  setTimeout(() => {
+    if (notificationAudioContext) {
+      notificationAudioContext.close()
+      notificationAudioContext = null
+    }
+  }, 500)
+
+  // 清空用户记录
+  previousUserIds.clear()
+
   // 关闭 WebSocket
   if (ws) {
     ws.close()
@@ -600,13 +706,21 @@ function leaveVoice() {
   emit('close')
 }
 
+// 页面关闭时清理资源
+function handleBeforeUnload() {
+  leaveVoice()
+}
+
 // 组件挂载时加入语音
 onMounted(() => {
   joinVoice()
+  // 监听页面关闭事件
+  window.addEventListener('beforeunload', handleBeforeUnload)
 })
 
 // 组件卸载时清理
 onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
   leaveVoice()
 })
 </script>

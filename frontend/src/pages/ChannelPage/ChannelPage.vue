@@ -151,6 +151,9 @@ const chatWindowRef = ref(null)
 
 // WebSocket 连接
 let ws = null
+let reconnectTimer = null
+let reconnectAttempts = 0
+const MAX_RECONNECT_ATTEMPTS = 5
 
 // 显示提示
 function showToastMsg(msg) {
@@ -240,6 +243,7 @@ function connectWebSocket(channelId) {
 
   ws.onopen = () => {
     console.log('WebSocket 连接成功')
+    reconnectAttempts = 0 // 连接成功，重置重连次数
   }
 
   ws.onmessage = (event) => {
@@ -253,6 +257,17 @@ function connectWebSocket(channelId) {
 
   ws.onclose = () => {
     console.log('WebSocket 连接关闭')
+    // 尝试重连
+    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+      reconnectAttempts++
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000) // 指数退避，最大30秒
+      console.log(`${delay / 1000}秒后尝试第${reconnectAttempts}次重连...`)
+      reconnectTimer = setTimeout(() => {
+        if (currentChannel.value) {
+          connectWebSocket(currentChannel.value.id)
+        }
+      }, delay)
+    }
   }
 
   ws.onerror = (error) => {
@@ -290,8 +305,15 @@ function openSettings() {
 
 // 退出登录
 function handleLogout() {
+  // 清除重连定时器
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer)
+    reconnectTimer = null
+  }
+  // 关闭 WebSocket
   if (ws) {
     ws.close()
+    ws = null
   }
   authStore.logout()
   router.push('/login')
