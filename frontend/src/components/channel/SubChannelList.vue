@@ -253,4 +253,126 @@ function copyChannelId() {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .sub-channel-header {
+    padding: 12px;
+  }
+
+  .channel-title {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  .channel-id {
+    font-size: 11px;
+  }
+
+  .sub-channel-sections {
+    padding: 6px;
+  }
+
+  .section {
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    padding: 3px 6px;
+    margin-bottom: 3px;
+  }
+
+  .sub-channel-item {
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+  }
+
+  .sub-channel-item .icon {
+    font-size: 14px;
+  }
+
+  .voice-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .sub-channel-item .name {
+    font-size: 13px;
+  }
+
+  .empty-tip {
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .toast {
+    bottom: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sub-channel-header {
+    padding: 10px;
+  }
+
+  .channel-title {
+    font-size: 13px;
+  }
+
+  .channel-id {
+    font-size: 10px;
+  }
+
+  .sub-channel-sections {
+    padding: 4px;
+  }
+
+  .section {
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-size: 10px;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+  }
+
+  .sub-channel-item {
+    gap: 4px;
+    padding: 5px 6px;
+    border-radius: 6px;
+    margin-bottom: 1px;
+  }
+
+  .sub-channel-item .icon {
+    font-size: 12px;
+  }
+
+  .voice-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .sub-channel-item .name {
+    font-size: 12px;
+  }
+
+  .empty-tip {
+    padding: 4px;
+    font-size: 10px;
+  }
+
+  .toast {
+    bottom: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+}
 </style>

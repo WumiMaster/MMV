@@ -479,6 +479,7 @@ defineExpose({
   height: 100%;
   min-height: 0;
   position: relative;
+  box-sizing: border-box;
 }
 
 .chat-header {
@@ -793,6 +794,169 @@ defineExpose({
   to {
     opacity: 0;
     transform: translateY(10px) scale(0.9);
+  }
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .chat-header {
+    padding: 10px 12px;
+  }
+
+  .chat-title {
+    font-size: 14px;
+  }
+
+  .message-list {
+    padding: 10px 12px;
+  }
+
+  .message-item {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .message-content {
+    max-width: 80%;
+  }
+
+  .message-header {
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .nickname {
+    font-size: 12px;
+  }
+
+  .time {
+    font-size: 10px;
+  }
+
+  .message-text {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 0 12px 12px 12px;
+  }
+
+  .is-self .message-text {
+    border-radius: 12px 0 12px 12px;
+  }
+
+  .message-image img {
+    max-width: 200px;
+    max-height: 150px;
+    border-radius: 10px;
+  }
+
+  .new-message-hint {
+    bottom: 70px;
+    right: 16px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .preview-controls {
+    top: 10px;
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .preview-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .zoom-level {
+    font-size: 12px;
+    min-width: 35px;
+  }
+
+  .loading-tip,
+  .empty-tip {
+    padding: 24px 0;
+    font-size: 13px;
+    margin: 8px;
+  }
+
+  .load-more {
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-header {
+    padding: 8px 10px;
+  }
+
+  .chat-title {
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .message-list {
+    padding: 8px 10px;
+  }
+
+  .message-item {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .message-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .message-content {
+    max-width: 85%;
+  }
+
+  .message-text {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 0 10px 10px 10px;
+  }
+
+  .is-self .message-text {
+    border-radius: 10px 0 10px 10px;
+  }
+
+  .message-image img {
+    max-width: 160px;
+    max-height: 120px;
+    border-radius: 8px;
+  }
+
+  .new-message-hint {
+    bottom: 60px;
+    right: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 20px;
+  }
+
+  .arrow-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .message-count {
+    padding: 1px 6px;
+    font-size: 11px;
+  }
+
+  .hint-text {
+    font-size: 12px;
   }
 }
 </style>

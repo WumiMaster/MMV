@@ -610,6 +610,58 @@ onMounted(() => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  /* 移除拖动手柄 */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 响应式宽度 */
+@media (max-width: 360px) {
+  .sidebar {
+    width: 240px;
+  }
+}
+
+@media (min-width: 361px) and (max-width: 480px) {
+  .sidebar {
+    width: 260px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .sidebar {
+    width: 280px;
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar {
+    width: 300px;
+  }
+}
+
+/* 确保侧边栏没有拖动手柄 */
+.sidebar * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 移除可能的拖动手柄样式 */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 170, 195, 0.4);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 150, 180, 0.6);
 }
 
 /* 阴影层（独立元素，平滑过渡） */
@@ -644,6 +696,8 @@ onMounted(() => {
   background: rgba(0, 0, 0, 0.3);
   z-index: 199;
   animation: fadeIn 0.2s ease;
+  /* 确保遮罩可以点击关闭 */
+  cursor: pointer;
 }
 
 @keyframes fadeIn {
@@ -842,5 +896,161 @@ onMounted(() => {
   padding: 12px;
   border-top: 1px solid rgba(220, 210, 218, 0.3);
   background: rgba(255, 245, 250, 0.6);
+  /* 移除拖动手柄 */
+  cursor: default;
+}
+
+/* 隐藏可能的拖动手柄 */
+.sidebar-footer::before,
+.sidebar-footer::after {
+  display: none !important;
+}
+
+/* 确保侧边栏没有额外的拖动区域 */
+.sidebar::before {
+  display: none !important;
+}
+
+.sidebar::after {
+  display: none !important;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .top-navbar {
+    height: 56px;
+    padding: 0 12px;
+  }
+
+  .nav-channels {
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  .nav-channel-item {
+    padding: 4px 10px;
+    border-radius: 16px;
+    gap: 6px;
+  }
+
+  .nav-channel-item .channel-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .join-channel-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .plus-svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .nav-right {
+    gap: 8px;
+    margin-left: 8px;
+  }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .icon-svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sidebar-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .sidebar-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sidebar {
+    top: 56px;
+  }
+
+  .sidebar-footer {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-navbar {
+    height: 52px;
+    padding: 0 10px;
+  }
+
+  .nav-channels {
+    gap: 4px;
+    padding: 2px 0;
+  }
+
+  .nav-channel-item {
+    padding: 3px 8px;
+    border-radius: 14px;
+    gap: 4px;
+  }
+
+  .nav-channel-item .channel-icon {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  .join-channel-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .plus-svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .nav-right {
+    gap: 6px;
+    margin-left: 6px;
+  }
+
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .icon-svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sidebar-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+  }
+
+  .sidebar-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sidebar {
+    top: 52px;
+  }
+
+  .sidebar-footer {
+    padding: 6px;
+  }
 }
 </style>

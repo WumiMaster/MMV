@@ -19,17 +19,17 @@ export default defineConfig({
     } : false,
     proxy: {
       '/api': {
-        target: useHttps ? 'https://localhost:8000' : 'http://localhost:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false
       },
       '/uploads': {
-        target: useHttps ? 'https://localhost:8000' : 'http://localhost:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false
       },
       '/ws': {
-        target: useHttps ? 'wss://localhost:8000' : 'ws://localhost:8000',
+        target: 'ws://localhost:8000',
         ws: true,
         secure: false
       }

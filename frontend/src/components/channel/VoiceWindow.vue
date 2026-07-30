@@ -863,14 +863,17 @@ defineExpose({
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
   background: linear-gradient(180deg, rgba(255, 240, 248, 0.5) 0%, rgba(255, 245, 250, 0.4) 100%);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .voice-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid rgba(220, 200, 210, 0.4);
   background: rgba(255, 242, 250, 0.4);
   flex-shrink: 0;
@@ -880,7 +883,7 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
 }
@@ -894,7 +897,7 @@ defineExpose({
 .leave-btn {
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
   background: rgba(255, 107, 107, 0.15);
   cursor: pointer;
@@ -916,25 +919,45 @@ defineExpose({
 
 .voice-users {
   flex: 1;
-  overflow-y: auto;
-  padding: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 10px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-content: flex-start;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: center;
+  min-height: 0;
+  scrollbar-width: thin;
+}
+
+.voice-users::-webkit-scrollbar {
+  height: 4px;
+}
+
+.voice-users::-webkit-scrollbar-thumb {
+  background: rgba(255, 170, 195, 0.4);
+  border-radius: 2px;
+}
+
+.voice-users::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .voice-user {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: 80px;
+  gap: 4px;
+  width: 64px;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  flex-shrink: 0;
 }
 
 .user-avatar {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, #FF9EB5, #7ED7A7);
   display: flex;
@@ -957,7 +980,7 @@ defineExpose({
 
 .user-avatar span {
   color: white;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -1003,14 +1026,18 @@ defineExpose({
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 80px;
+  max-width: 64px;
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  min-height: 0;
 }
 
 .empty-tip {
   width: 100%;
   text-align: center;
   color: #999;
-  padding: 40px 0;
+  padding: 8px 0;
   font-size: 14px;
 }
 
@@ -1018,17 +1045,17 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: 10px;
+  padding: 6px 12px;
   border-top: 1px solid rgba(220, 200, 210, 0.4);
   background: rgba(255, 242, 250, 0.4);
   flex-shrink: 0;
 }
 
 .control-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: none;
   background: rgba(255, 240, 248, 0.6);
   cursor: pointer;
@@ -1049,8 +1076,8 @@ defineExpose({
 }
 
 .control-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: #666;
 }
 
@@ -1062,17 +1089,17 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 12px;
+  padding: 0 8px;
 }
 
 .volume-control svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   color: #888;
 }
 
 .volume-slider {
-  width: 100px;
+  width: 80px;
   height: 4px;
   -webkit-appearance: none;
   appearance: none;
@@ -1089,5 +1116,180 @@ defineExpose({
   background: linear-gradient(135deg, #FF9EB5, #7ED7A7);
   cursor: pointer;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .voice-header {
+    padding: 6px 10px;
+  }
+
+  .voice-title {
+    font-size: 13px;
+    gap: 6px;
+  }
+
+  .voice-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .leave-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  .leave-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .voice-users {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+
+  .voice-user {
+    width: 52px;
+    gap: 3px;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-avatar span {
+    font-size: 15px;
+  }
+
+  .user-name {
+    font-size: 11px;
+    max-width: 52px;
+  }
+
+  .voice-controls {
+    padding: 5px 10px;
+    gap: 8px;
+  }
+
+  .control-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+  }
+
+  .control-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .volume-control {
+    gap: 4px;
+    padding: 0 6px;
+  }
+
+  .volume-control svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .volume-slider {
+    width: 60px;
+    height: 3px;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .voice-header {
+    padding: 5px 8px;
+  }
+
+  .voice-title {
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  .voice-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .leave-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+  }
+
+  .leave-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .voice-users {
+    padding: 4px 6px;
+    gap: 6px;
+  }
+
+  .voice-user {
+    width: 46px;
+    gap: 2px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-avatar span {
+    font-size: 13px;
+  }
+
+  .user-name {
+    font-size: 10px;
+    max-width: 46px;
+  }
+
+  .voice-controls {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .control-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+  }
+
+  .control-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .volume-control {
+    gap: 3px;
+    padding: 0 4px;
+  }
+
+  .volume-control svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .volume-slider {
+    width: 50px;
+    height: 3px;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    width: 10px;
+    height: 10px;
+  }
 }
 </style>

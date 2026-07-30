@@ -358,4 +358,131 @@ async function sendMessage() {
   font-size: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .message-input {
+    padding: 10px 12px;
+  }
+
+  .input-row {
+    gap: 6px;
+  }
+
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .action-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .input-field {
+    min-height: 36px;
+    max-height: 100px;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+
+  .send-btn {
+    height: 36px;
+    padding: 0 16px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+
+  .image-preview {
+    left: 12px;
+    margin-bottom: 6px;
+    padding: 6px;
+    border-radius: 10px;
+  }
+
+  .image-preview img {
+    max-width: 150px;
+    max-height: 120px;
+    border-radius: 8px;
+  }
+
+  .image-preview .remove-btn {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    top: -6px;
+    right: -6px;
+  }
+
+  .uploading-tip {
+    top: -28px;
+    padding: 4px 12px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .message-input {
+    padding: 8px 10px;
+  }
+
+  .input-row {
+    gap: 4px;
+  }
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+  }
+
+  .action-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .input-field {
+    min-height: 32px;
+    max-height: 80px;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .send-btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+
+  .image-preview {
+    left: 10px;
+    margin-bottom: 4px;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .image-preview img {
+    max-width: 120px;
+    max-height: 100px;
+    border-radius: 6px;
+  }
+
+  .image-preview .remove-btn {
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    top: -5px;
+    right: -5px;
+  }
+
+  .uploading-tip {
+    top: -26px;
+    padding: 3px 10px;
+    font-size: 10px;
+  }
+}
 </style>

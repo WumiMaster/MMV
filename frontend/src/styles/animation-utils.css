@@ -1,0 +1,424 @@
+/**
+ * 动画工具类CSS
+ * 提供常用的动画类和工具
+ */
+
+/* ==================== 动画基础类 ==================== */
+
+/* 动画容器 */
+.animate-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 隐藏元素（用于动画） */
+.animate-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* 显示元素 */
+.animate-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ==================== 进入动画 ==================== */
+
+/* 淡入 */
+.fade-in {
+  animation: fadeIn var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.fade-in-up {
+  animation: fadeInUp var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.fade-in-down {
+  animation: fadeInDown var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.fade-in-left {
+  animation: fadeInLeft var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.fade-in-right {
+  animation: fadeInRight var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+/* 滑入 */
+.slide-in-up {
+  animation: slideInUp var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.slide-in-down {
+  animation: slideInDown var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.slide-in-left {
+  animation: slideInLeft var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+/* 缩放 */
+.scale-in {
+  animation: scaleIn var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.scale-in-up {
+  animation: scaleInUp var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+.scale-in-down {
+  animation: scaleInDown var(--animate-duration, 0.3s) var(--animate-easing, cubic-bezier(0.25, 0.46, 0.45, 0.94)) forwards;
+}
+
+/* 弹入 */
+.bounce-in {
+  animation: bounceIn var(--animate-duration, 0.5s) var(--animate-easing, cubic-bezier(0.68, -0.55, 0.265, 1.55)) forwards;
+}
+
+.bounce-in-up {
+  animation: bounceInUp var(--animate-duration, 0.5s) var(--animate-easing, cubic-bezier(0.68, -0.55, 0.265, 1.55)) forwards;
+}
+
+.bounce-in-down {
+  animation: bounceInDown var(--animate-duration, 0.5s) var(--animate-easing, cubic-bezier(0.68, -0.55, 0.265, 1.55)) forwards;
+}
+
+/* 翻转 */
+.flip-in {
+  animation: flipIn var(--animate-duration, 0.4s) var(--animate-easing, ease-out) forwards;
+}
+
+.flip-in-x {
+  animation: flipInX var(--animate-duration, 0.4s) var(--animate-easing, ease-out) forwards;
+}
+
+.flip-in-y {
+  animation: flipInY var(--animate-duration, 0.4s) var(--animate-easing, ease-out) forwards;
+}
+
+/* 旋转 */
+.rotate-in {
+  animation: rotateIn var(--animate-duration, 0.3s) var(--animate-easing, ease-out) forwards;
+}
+
+.rotate-in-down-left {
+  animation: rotateInDownLeft var(--animate-duration, 0.3s) var(--animate-easing, ease-out) forwards;
+}
+
+.rotate-in-down-right {
+  animation: rotateInDownRight var(--animate-duration, 0.3s) var(--animate-easing, ease-out) forwards;
+}
+
+/* ==================== 退出动画 ==================== */
+
+/* 淡出 */
+.fade-out {
+  animation: fadeOut var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.fade-out-up {
+  animation: fadeOutUp var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.fade-out-down {
+  animation: fadeOutDown var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.fade-out-left {
+  animation: fadeOutLeft var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.fade-out-right {
+  animation: fadeOutRight var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+/* 滑出 */
+.slide-out-up {
+  animation: slideOutUp var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.slide-out-down {
+  animation: slideOutDown var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.slide-out-left {
+  animation: slideOutLeft var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.slide-out-right {
+  animation: slideOutRight var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+/* 缩放 */
+.scale-out {
+  animation: scaleOut var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.scale-out-up {
+  animation: scaleOutUp var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+.scale-out-down {
+  animation: scaleOutDown var(--animate-duration, 0.2s) var(--animate-easing, ease-in) forwards;
+}
+
+/* 弹出 */
+.bounce-out {
+  animation: bounceOut var(--animate-duration, 0.3s) var(--animate-easing, ease-in) forwards;
+}
+
+.bounce-out-up {
+  animation: bounceOutUp var(--animate-duration, 0.3s) var(--animate-easing, ease-in) forwards;
+}
+
+.bounce-out-down {
+  animation: bounceOutDown var(--animate-duration, 0.3s) var(--animate-easing, ease-in) forwards;
+}
+
+/* ==================== 强调动画 ==================== */
+
+/* 脉冲 */
+.pulse {
+  animation: pulse var(--animate-duration, 1s) var(--animate-easing, ease-in-out) infinite;
+}
+
+/* 闪烁 */
+.flash {
+  animation: flash var(--animate-duration, 1s) var(--animate-easing, linear) infinite;
+}
+
+/* 弹跳 */
+.bounce {
+  animation: bounce var(--animate-duration, 1s) var(--animate-easing, ease-in-out) infinite;
+}
+
+/* 摇晃 */
+.shake {
+  animation: shake var(--animate-duration, 0.5s) var(--animate-easing, ease-in-out);
+}
+
+/* 抖动 */
+.wobble {
+  animation: wobble var(--animate-duration, 0.5s) var(--animate-easing, ease-in-out);
+}
+
+/* 摆动 */
+.swing {
+  animation: swing var(--animate-duration, 0.5s) var(--animate-easing, ease-in-out);
+}
+
+/* 旋转 */
+.spin {
+  animation: spin var(--animate-duration, 1s) var(--animate-easing, linear) infinite;
+}
+
+/* 反向旋转 */
+.spin-reverse {
+  animation: spin var(--animate-duration, 1s) var(--animate-easing, linear) infinite reverse;
+}
+
+/* ==================== 特效动画 ==================== */
+
+/* 悬浮 */
+.float {
+  animation: float var(--animate-duration, 3s) var(--animate-easing, ease-in-out) infinite;
+}
+
+/* 发光 */
+.glow {
+  animation: glow var(--animate-duration, 2s) var(--animate-easing, ease-in-out) infinite;
+}
+
+/* 闪烁 */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer var(--animate-duration, 1.5s) var(--animate-easing, linear) infinite;
+}
+
+/* 打字机效果 */
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid currentColor;
+  white-space: nowrap;
+  animation: typewriter var(--animate-duration, 2s) steps(40) forwards,
+             blink var(--animate-duration, 0.7s) step-end infinite;
+}
+
+/* ==================== 交互动画 ==================== */
+
+/* 点击效果 */
+.tap-effect {
+  transition: transform 0.1s ease;
+}
+
+.tap-effect:active {
+  transform: scale(0.95);
+}
+
+/* 悬浮效果 */
+.hover-effect {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 聚焦效果 */
+.focus-effect {
+  transition: box-shadow 0.2s ease;
+}
+
+.focus-effect:focus {
+  box-shadow: 0 0 0 3px rgba(255, 158, 181, 0.3);
+}
+
+/* ==================== 状态动画 ==================== */
+
+/* 加载中 */
+.loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid rgba(255, 158, 181, 0.3);
+  border-top-color: #FF9EB5;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* 成功状态 */
+.success {
+  animation: successPulse 0.5s ease;
+}
+
+/* 错误状态 */
+.error {
+  animation: errorShake 0.5s ease;
+}
+
+/* ==================== 交错动画 ==================== */
+
+/* 交错延迟 */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+.stagger-9 { animation-delay: 450ms; }
+.stagger-10 { animation-delay: 500ms; }
+
+/* ==================== 持续时间 ==================== */
+
+.duration-fast { --animate-duration: 0.15s; }
+.duration-normal { --animate-duration: 0.3s; }
+.duration-slow { --animate-duration: 0.5s; }
+.duration-slower { --animate-duration: 0.8s; }
+.duration-slowest { --animate-duration: 1s; }
+
+/* ==================== 缓动函数 ==================== */
+
+.easing-linear { --animate-easing: linear; }
+.easing-ease { --animate-easing: ease; }
+.easing-ease-in { --animate-easing: ease-in; }
+.easing-ease-out { --animate-easing: ease-out; }
+.easing-ease-in-out { --animate-easing: ease-in-out; }
+.easing-ios { --animate-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+.easing-spring { --animate-easing: cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.easing-bounce { --animate-easing: cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+
+/* ==================== 响应式动画 ==================== */
+
+/* 减少动画（无障碍） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 移动端简化动画 */
+@media (max-width: 768px) {
+  .mobile-simplify {
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* ==================== 性能优化 ==================== */
+
+/* 硬件加速 */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 优化渲染 */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+/* 平滑滚动 */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* ==================== 动画容器 ==================== */
+
+/* 动画组 */
+.animation-group {
+  position: relative;
+}
+
+.animation-group > * {
+  animation-fill-mode: both;
+}
+
+/* 动画队列 */
+.animation-queue {
+  display: flex;
+  flex-direction: column;
+}
+
+.animation-queue > * {
+  animation-fill-mode: both;
+}
+
+/* 动画网格 */
+.animation-grid {
+  display: grid;
+  gap: var(--grid-gap, 8px);
+}
+
+.animation-grid > * {
+  animation-fill-mode: both;
+}

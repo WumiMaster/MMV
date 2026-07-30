@@ -137,17 +137,22 @@
             <button class="modal-close" @click="showCreateModal = false">×</button>
           </div>
 
-        <!-- 头像上传 -->
-        <div class="avatar-upload" @click="triggerCreateAvatarInput">
-          <div v-if="createAvatarPreview" class="avatar-preview">
-            <img :src="createAvatarPreview" alt="头像预览" />
-          </div>
-          <div v-else class="avatar-placeholder">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-              <circle cx="12" cy="13" r="4"></circle>
-            </svg>
-            <div>点击上传头像</div>
+        <!-- 头像上传（居中） -->
+        <div class="avatar-section">
+          <div class="avatar-wrapper" @click="triggerCreateAvatarInput">
+            <div class="avatar-preview">
+              <img v-if="createAvatarPreview" :src="createAvatarPreview" alt="头像预览" />
+              <div v-else class="avatar-placeholder">
+                <span>?</span>
+              </div>
+            </div>
+            <div class="avatar-overlay">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <span>点击更换</span>
+            </div>
           </div>
           <input ref="createAvatarInput" type="file" accept="image/*" style="display: none" @change="handleCreateAvatarChange" />
         </div>
@@ -185,19 +190,22 @@
           </div>
 
           <!-- 头像上传（居中） -->
-          <div class="avatar-upload" @click="triggerEditAvatarInput">
-            <div v-if="editAvatarPreview" class="avatar-preview">
-              <img :src="editAvatarPreview" alt="头像预览" />
-            </div>
-            <div v-else-if="editForm.avatar" class="avatar-preview">
-              <img :src="editForm.avatar" alt="当前头像" />
-            </div>
-            <div v-else class="avatar-placeholder">
-              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                <circle cx="12" cy="13" r="4"></circle>
-              </svg>
-              <div>点击上传头像</div>
+          <div class="avatar-section">
+            <div class="avatar-wrapper" @click="triggerEditAvatarInput">
+              <div class="avatar-preview">
+                <img v-if="editAvatarPreview" :src="editAvatarPreview" alt="头像预览" />
+                <img v-else-if="editForm.avatar" :src="editForm.avatar" alt="当前头像" />
+                <div v-else class="avatar-placeholder">
+                  <span>{{ editForm.nickname?.charAt(0) || '?' }}</span>
+                </div>
+              </div>
+              <div class="avatar-overlay">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <span>点击更换</span>
+              </div>
             </div>
             <input ref="editAvatarInput" type="file" accept="image/*" style="display: none" @change="handleEditAvatarChange" />
           </div>
@@ -902,51 +910,77 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.avatar-upload {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 2px dashed rgba(200, 190, 198, 0.6);
-  background: rgba(255, 245, 250, 0.5);
-  margin: 0 auto 24px;
-  cursor: pointer;
-  transition: all 0.2s;
-  overflow: hidden;
-}
-
-.avatar-upload:hover {
-  border-color: #7ED7A7;
-  background: rgba(255, 240, 248, 0.7);
-  transform: scale(1.05);
-}
-
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
+/* 头像上传区域（与设置页面一致） */
+.avatar-section {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  color: #666;
-  font-size: 12px;
+  margin-bottom: 24px;
 }
 
-.avatar-placeholder .upload-icon {
-  width: 28px;
-  height: 28px;
-  color: #999;
-  margin-bottom: 4px;
+.avatar-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
 }
 
 .avatar-preview {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255, 158, 181, 0.3);
 }
 
 .avatar-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF9EB5, #7ED7A7);
+  color: white;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 50%;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay svg {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
+}
+
+.avatar-overlay span {
+  font-size: 10px;
+  color: white;
 }
 
 .form-group {

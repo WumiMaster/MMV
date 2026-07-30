@@ -155,14 +155,16 @@ defineExpose({
   animation: panelSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* 文字频道窗口占更多空间 */
+/* 文字频道窗口占 70% */
 .text-panel {
-  flex: 1;
+  flex: 7;
+  min-height: 0;
 }
 
-/* 语音频道窗口 - 足够显示用户列表 */
+/* 语音频道窗口占 30% */
 .voice-panel {
-  flex: 0 0 280px;
+  flex: 3;
+  min-height: 0;
 }
 
 @keyframes panelSlideIn {
@@ -204,5 +206,52 @@ defineExpose({
 .empty-desc {
   font-size: 14px;
   color: #999;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .window-manager {
+    gap: 1px;
+  }
+
+  .empty-state {
+    padding: 24px;
+  }
+
+  .empty-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+  }
+
+  .empty-title {
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .empty-desc {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .empty-state {
+    padding: 16px;
+  }
+
+  .empty-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+  }
+
+  .empty-title {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .empty-desc {
+    font-size: 12px;
+  }
 }
 </style>
