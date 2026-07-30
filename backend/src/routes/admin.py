@@ -5,12 +5,15 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from ..config.database import get_db
 from ..models.user import User, UserRole
+from ..models.channel import UserChannel
+from ..models.message import Message
 from ..services.auth_service import hash_password
 from ..middlewares.auth import get_current_admin
+from ..utils.validators import validate_username, validate_password, validate_nickname
 import os
 import uuid
 
@@ -28,6 +31,30 @@ class CreateUserRequest(BaseModel):
     username: str
     password: str
     nickname: str
+
+    @field_validator('username')
+    @classmethod
+    def validate_username_field(cls, v):
+        is_valid, message = validate_username(v)
+        if not is_valid:
+            raise ValueError(message)
+        return v
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_field(cls, v):
+        is_valid, message = validate_password(v)
+        if not is_valid:
+            raise ValueError(message)
+        return v
+
+    @field_validator('nickname')
+    @classmethod
+    def validate_nickname_field(cls, v):
+        is_valid, message = validate_nickname(v)
+        if not is_valid:
+            raise ValueError(message)
+        return v
 
 
 class UpdateUserRequest(BaseModel):
@@ -181,6 +208,13 @@ async def delete_user(
             detail="不能删除当前登录的管理员账号"
         )
 
+    # 先删除用户-频道关联
+    db.query(UserChannel).filter(UserChannel.user_id == user_id).delete()
+
+    # 将用户消息的 user_id 设为 NULL
+    db.query(Message).filter(Message.user_id == user_id).update({"user_id": None})
+
+    # 删除用户
     db.delete(user)
     db.commit()
 

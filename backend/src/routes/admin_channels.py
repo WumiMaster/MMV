@@ -11,7 +11,8 @@ import os
 import uuid
 from ..config.database import get_db
 from ..models.user import User
-from ..models.channel import Channel, SubChannel
+from ..models.channel import Channel, SubChannel, UserChannel
+from ..models.message import Message
 from ..middlewares.auth import get_current_admin
 
 router = APIRouter(prefix="/api/admin", tags=["管理员-频道管理"])
@@ -350,6 +351,17 @@ async def delete_channel(
             detail="频道不存在"
         )
 
+    # 获取所有子频道ID
+    sub_channel_ids = [sc.id for sc in channel.sub_channels]
+
+    # 先删除子频道的消息
+    if sub_channel_ids:
+        db.query(Message).filter(Message.sub_channel_id.in_(sub_channel_ids)).delete()
+
+    # 删除用户-频道关联
+    db.query(UserChannel).filter(UserChannel.channel_id == channel_id).delete()
+
+    # 删除频道（会级联删除子频道）
     db.delete(channel)
     db.commit()
 

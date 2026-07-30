@@ -59,12 +59,12 @@ class UserChannel(Base):
     __tablename__ = "user_channels"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
-    channel_id = Column(Integer, ForeignKey("channels.id"), nullable=False, comment="频道ID")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, comment="用户ID")
+    channel_id = Column(Integer, ForeignKey("channels.id", ondelete="CASCADE"), nullable=False, comment="频道ID")
     joined_at = Column(DateTime(timezone=True), server_default=func.now(), comment="加入时间")
 
     # 关联关系
-    user = relationship("User", backref="joined_channels")
+    user = relationship("User", backref="joined_channels", passive_deletes=True)
     channel = relationship("Channel", back_populates="members")
 
     # 联合唯一约束：一个用户对一个频道只能加入一次

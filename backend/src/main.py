@@ -81,7 +81,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="喵喵语音 API",
     description="浏览器端精简版 Discord 后端服务",
-    version="1.3.2",
+    version="1.3.3",
     lifespan=lifespan
 )
 
