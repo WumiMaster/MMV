@@ -515,17 +515,13 @@ async function handleCreateSubChannel() {
       type: subChannelForm.value.type,
       sort_order: Number(subChannelForm.value.sort_order) || 0
     }
-    console.log('创建子频道:', data)
-    console.log('频道ID:', currentManageChannel.value.id)
-    const response = await api.post(`/api/admin/channels/${currentManageChannel.value.id}/sub-channels`, data)
-    console.log('创建成功:', response.data)
+    await api.post(`/api/admin/channels/${currentManageChannel.value.id}/sub-channels`, data)
     showToast('子频道添加成功')
     showCreateSubChannelModal.value = false
     subChannelForm.value = { name: '', type: 'text', sort_order: 0 }
     loadSubChannels(currentManageChannel.value.id)
     loadChannels(currentPage.value)
   } catch (error) {
-    console.error('创建子频道失败:', error)
     showToast(error.response?.data?.detail || '添加失败', 'error')
   }
 }

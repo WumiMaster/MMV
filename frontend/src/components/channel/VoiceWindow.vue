@@ -294,8 +294,6 @@ async function fetchVoiceUsers() {
     voiceUsers.value = Array.from(userMap.values())
     previousUserIds = newUserIds
 
-    console.log('当前语音用户:', voiceUsers.value.length, '人')
-
   } catch (error) {
     console.error('获取语音用户失败:', error)
     // 即使API失败，也显示当前用户
@@ -429,12 +427,10 @@ function connectSignaling() {
   ws = new WebSocket(wsUrl)
 
   ws.onopen = () => {
-    console.log('语音信令连接成功，WebSocket URL:', wsUrl)
     reconnectAttempts = 0 // 连接成功，重置重连次数
   }
 
   ws.onmessage = (event) => {
-    console.log('收到语音信令消息:', event.data)
     try {
       const data = JSON.parse(event.data)
       handleSignalingMessage(data)
@@ -444,12 +440,10 @@ function connectSignaling() {
   }
 
   ws.onclose = (event) => {
-    console.log('语音信令连接关闭，代码:', event.code, '原因:', event.reason)
     // 尝试重连（只有在正常关闭时才重连，错误关闭由 onerror 处理）
     if (event.code === 1000 && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       reconnectAttempts++
       const delay = 2000 * reconnectAttempts // 2秒、4秒、6秒
-      console.log(`${delay / 1000}秒后尝试第${reconnectAttempts}次重连语音信令...`)
       reconnectTimer = setTimeout(() => {
         connectSignaling()
       }, delay)
@@ -521,13 +515,9 @@ async function createPeerConnection(targetUserId, isInitiator) {
   // 添加本地音频流
   if (localStream) {
     const audioTracks = localStream.getAudioTracks()
-    console.log('本地音频轨道数:', audioTracks.length)
     audioTracks.forEach(track => {
-      console.log('添加音频轨道:', track.label, 'enabled:', track.enabled)
       pc.addTrack(track, localStream)
     })
-  } else {
-    console.warn('没有本地音频流')
   }
 
   // ICE candidate 事件
@@ -543,11 +533,6 @@ async function createPeerConnection(targetUserId, isInitiator) {
 
   // 接收远程音频流
   pc.ontrack = (event) => {
-    console.log('收到远程音频流:', targetUserId, 'streams:', event.streams.length)
-    if (event.streams && event.streams[0]) {
-      console.log('音频轨道数:', event.streams[0].getAudioTracks().length)
-    }
-
     const remoteAudio = new Audio()
     remoteAudio.srcObject = event.streams[0]
     remoteAudio.volume = volume.value / 100
@@ -561,17 +546,13 @@ async function createPeerConnection(targetUserId, isInitiator) {
     // 尝试播放音频
     const playPromise = remoteAudio.play()
     if (playPromise !== undefined) {
-      playPromise.then(() => {
-        console.log('音频播放成功:', targetUserId)
-      }).catch(error => {
-        console.warn('自动播放被阻止，需要用户交互:', error)
+      playPromise.catch(() => {
         // 添加点击事件监听器来解锁音频
         const unlockAudio = () => {
           remoteAudio.play().then(() => {
-            console.log('音频解锁成功:', targetUserId)
             document.removeEventListener('click', unlockAudio)
             document.removeEventListener('touchstart', unlockAudio)
-          }).catch(e => console.error('音频解锁失败:', e))
+          }).catch(() => {})
         }
         document.addEventListener('click', unlockAudio)
         document.addEventListener('touchstart', unlockAudio)
@@ -586,7 +567,6 @@ async function createPeerConnection(targetUserId, isInitiator) {
 
   // 连接状态变更
   pc.onconnectionstatechange = () => {
-    console.log(`P2P 连接状态 [${targetUserId}]:`, pc.connectionState)
     if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
       closePeerConnection(targetUserId)
     }

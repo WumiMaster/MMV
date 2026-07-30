@@ -272,7 +272,6 @@ function connectWebSocket(channelId) {
   ws = new WebSocket(wsUrl)
 
   ws.onopen = () => {
-    console.log('WebSocket 连接成功')
     reconnectAttempts = 0 // 连接成功，重置重连次数
   }
 
@@ -286,12 +285,10 @@ function connectWebSocket(channelId) {
   }
 
   ws.onclose = () => {
-    console.log('WebSocket 连接关闭')
     // 尝试重连
     if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       reconnectAttempts++
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000) // 指数退避，最大30秒
-      console.log(`${delay / 1000}秒后尝试第${reconnectAttempts}次重连...`)
       reconnectTimer = setTimeout(() => {
         if (currentChannel.value) {
           connectWebSocket(currentChannel.value.id)
