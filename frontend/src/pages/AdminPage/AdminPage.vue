@@ -172,7 +172,7 @@
           <button class="btn-primary" @click="handleCreateUser">确认</button>
         </div>
       </div>
-      </div>
+    </div>
     </Teleport>
 
     <!-- 编辑用户弹窗 -->
@@ -235,9 +235,9 @@
           <div class="modal-header">
             <div class="modal-title">确认删除</div>
             <button class="modal-close" @click="showDeleteModal = false">×</button>
-        </div>
+          </div>
 
-        <p class="modal-desc">
+          <p class="modal-desc">
           确定要删除用户 <strong>{{ deleteTarget?.nickname }}</strong> 吗？<br />
           此操作不可撤销。
         </p>
@@ -247,7 +247,7 @@
           <button class="btn-danger" @click="handleDeleteUser">确认删除</button>
         </div>
       </div>
-      </div>
+    </div>
     </Teleport>
 
     <!-- 不能删除自己的提示弹窗 -->
@@ -268,7 +268,7 @@
           <button class="btn-primary" @click="showCannotDeleteSelfModal = false">我知道了</button>
         </div>
       </div>
-      </div>
+    </div>
     </Teleport>
 
     <!-- Toast 提示 -->

@@ -2,7 +2,16 @@
   <div class="channel-container">
     <!-- 顶部导航栏 -->
     <nav class="top-navbar">
-      <!-- 左侧：频道列表（水平滚动） -->
+      <!-- 移动端：子频道切换按钮 -->
+      <button class="sidebar-toggle" @click="showSidebar = !showSidebar" v-if="currentChannel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- 频道列表（水平滚动） -->
       <div class="nav-channels">
         <div
           v-for="channel in myChannels"
@@ -25,19 +34,8 @@
         </button>
       </div>
 
-      <!-- 右侧：当前频道信息 + 操作按钮 -->
+      <!-- 右侧：操作按钮 -->
       <div class="nav-right">
-        <div v-if="currentChannel" class="current-channel-info">
-          <span class="info-name">{{ currentChannel.name }}</span>
-          <span class="info-id" @click="copyChannelId" title="点击复制">
-            ID: {{ currentChannel.channel_id }}
-            <svg class="copy-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </span>
-        </div>
-        <div v-else class="no-channel-tip">请选择或加入频道</div>
         <button class="icon-btn" title="设置" @click="openSettings">
           <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
@@ -54,20 +52,41 @@
       </div>
     </nav>
 
-    <!-- 主内容区域（导航栏下方） -->
+    <!-- 主内容区域 -->
     <div class="main-content">
+      <!-- 侧边栏遮罩（移动端） -->
+      <div v-if="showSidebar" class="sidebar-overlay" @click="showSidebar = false"></div>
+
       <!-- 左侧：子频道列表 -->
-      <SubChannelList
-        v-if="currentChannel"
-        :channel-name="currentChannel.name"
-        :channel-id="currentChannel.channel_id"
-        :sub-channels="subChannels"
-        :current-sub-channel="currentSubChannel"
-        @select-sub-channel="selectSubChannel"
-      />
+      <div class="sidebar" :class="{ open: showSidebar }">
+        <SubChannelList
+          v-if="currentChannel"
+          :channel-name="currentChannel.name"
+          :channel-id="currentChannel.channel_id"
+          :sub-channels="subChannels"
+          :current-sub-channel="currentSubChannel"
+          @select-sub-channel="handleSelectSubChannel"
+        />
+        <!-- 网络监控 -->
+        <div class="sidebar-footer">
+          <NetworkMonitor />
+        </div>
+      </div>
 
       <!-- 右侧：窗口区域 -->
       <div class="content-area">
+        <!-- 频道信息栏（移动端隐藏） -->
+        <div v-if="currentChannel" class="channel-info-bar">
+          <span class="info-name">{{ currentChannel.name }}</span>
+          <span class="info-id" @click="copyChannelId" title="点击复制">
+            ID: {{ currentChannel.channel_id }}
+            <svg class="copy-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </span>
+        </div>
+
         <!-- 悬浮窗口管理器 -->
         <WindowManager
           ref="windowManagerRef"
@@ -89,9 +108,6 @@
       v-if="showSettings"
       @close="showSettings = false"
     />
-
-    <!-- 网络监控 -->
-    <NetworkMonitor />
 
     <!-- Toast 提示 -->
     <div v-if="showToast" class="toast" :class="{ show: showToast }">
@@ -127,6 +143,7 @@ const currentSubChannel = ref(null)
 const windowManagerRef = ref(null)
 
 // UI 状态
+const showSidebar = ref(false)
 const showJoinModal = ref(false)
 const showSettings = ref(false)
 const showToast = ref(false)
@@ -215,6 +232,15 @@ function selectSubChannel(subChannel) {
   }
 
   currentSubChannel.value = subChannel
+}
+
+// 选择子频道并关闭侧边栏（移动端）
+function handleSelectSubChannel(subChannel) {
+  selectSubChannel(subChannel)
+  // 移动端选择后关闭侧边栏
+  if (window.innerWidth < 768) {
+    showSidebar.value = false
+  }
 }
 
 // 加入频道成功
@@ -539,18 +565,138 @@ onMounted(() => {
   box-shadow: 0 3px 12px rgba(255, 158, 181, 0.22);
 }
 
+/* 侧边栏切换按钮 */
+.sidebar-toggle {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 238, 245, 0.6);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle svg {
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
 /* 主内容区域 */
 .main-content {
   flex: 1;
   display: flex;
   overflow: hidden;
   min-height: 0;
+  position: relative;
+}
+
+/* 侧边栏（抽屉式） */
+.sidebar {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 200;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 245, 250, 0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 阴影层（独立元素，平滑过渡） */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -20px;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.sidebar.open::after {
+  opacity: 1;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+/* 侧边栏遮罩 */
+.sidebar-overlay {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 199;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 频道信息栏 */
+.channel-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 242, 248, 0.4);
+  border-bottom: 1px solid rgba(220, 210, 218, 0.3);
+  flex-shrink: 0;
+}
+
+.info-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.info-id {
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(255, 240, 248, 0.5);
+  border: 1px solid rgba(220, 210, 218, 0.4);
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.info-id:hover {
+  background: rgba(255, 232, 242, 0.6);
+}
+
+.copy-icon-svg {
+  width: 12px;
+  height: 12px;
 }
 
 .content-area {
   flex: 1;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(
     135deg,
     rgba(255, 245, 250, 0.3) 0%,
@@ -678,5 +824,23 @@ onMounted(() => {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* 频道名称在侧边栏模式下隐藏 */
+.nav-channel-item .channel-name {
+  display: none;
+}
+
+/* 频道信息栏隐藏（信息已在侧边栏显示） */
+.channel-info-bar {
+  display: none;
+}
+
+/* 侧边栏底部 */
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 1px solid rgba(220, 210, 218, 0.3);
+  background: rgba(255, 245, 250, 0.6);
 }
 </style>

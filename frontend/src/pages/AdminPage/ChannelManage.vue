@@ -113,7 +113,7 @@
     <!-- 编辑频道弹窗 -->
     <Teleport to="body">
       <div v-if="showEditChannelModal" class="modal-overlay animate-overlay-in" @click.self="showEditChannelModal = false">
-        <div class="glass-card modal animate-modal-in">
+          <div class="glass-card modal">
           <div class="modal-header">
             <div class="modal-title">编辑频道</div>
             <button class="modal-close" @click="showEditChannelModal = false">×</button>

@@ -1,13 +1,14 @@
 <template>
   <!-- 加入频道弹窗 -->
-  <div class="modal-overlay animate-overlay-in" @click.self="$emit('close')">
-    <div class="glass-card modal animate-modal-in">
-      <div class="modal-header">
-        <div class="modal-title">加入频道</div>
-        <button class="modal-close" @click="$emit('close')">×</button>
-      </div>
+  <Teleport to="body">
+    <div class="modal-overlay animate-overlay-in" @click.self="$emit('close')">
+      <div class="glass-card modal animate-modal-in">
+        <div class="modal-header">
+          <div class="modal-title">加入频道</div>
+          <button class="modal-close" @click="$emit('close')">×</button>
+        </div>
 
-      <div v-if="errorMessage" class="error-toast">
+        <div v-if="errorMessage" class="error-toast">
         {{ errorMessage }}
       </div>
 
@@ -33,7 +34,8 @@
         </button>
       </div>
     </div>
-  </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>

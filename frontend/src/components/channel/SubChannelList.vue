@@ -119,7 +119,7 @@ function copyChannelId() {
 
 <style scoped>
 .sub-channel-list {
-  width: 200px;
+  width: 100%;
   background: linear-gradient(
     180deg,
     rgba(255, 238, 248, 0.55) 0%,
@@ -127,12 +127,11 @@ function copyChannelId() {
   );
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(220, 200, 210, 0.5);
   display: flex;
   flex-direction: column;
-  height: 100%;
-  position: relative;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .sub-channel-header {

@@ -163,45 +163,72 @@ const peerConnections = ref({})
 
 // 提示音配置
 const NOTIFICATION_SOUNDS = {
-  join: { name: '清脆提示', freq: [800, 1000], duration: 0.15, type: 'sine' },
-  leave: { name: '轻柔下降', freq: [600, 500, 400, 300], duration: 0.08, type: 'sine' },
-  userJoin: { name: '清脆双音', freq: [600, 800], duration: 0.1, type: 'sine' },
+  join: { name: '清脆提示', freq: [800, 1000], duration: 0.12, type: 'sine' },
+  leave: { name: '轻柔下降', freq: [600, 500, 400, 300], duration: 0.12, type: 'sine' },
+  userJoin: { name: '清脆双音', freq: [600, 800], duration: 0.12, type: 'sine' },
   userLeave: { name: '低沉提示', freq: [400, 300], duration: 0.12, type: 'sine' }
 }
 
-// 播放提示音
+// 播放提示音（使用独立的 AudioContext 避免冲突）
 let notificationAudioContext = null
-function playNotificationSound(type) {
+let isPlayingNotification = false
+
+async function playNotificationSound(type) {
+  // 防止重叠播放
+  if (isPlayingNotification) return
+  isPlayingNotification = true
+
   try {
-    if (!notificationAudioContext) {
-      notificationAudioContext = new (window.AudioContext || window.webkitAudioContext)()
+    // 每次创建新的 AudioContext 避免与语音的 AudioContext 冲突
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+    // 确保音频上下文是运行状态
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume()
     }
 
     const sound = NOTIFICATION_SOUNDS[type]
     if (!sound) return
 
-    const now = notificationAudioContext.currentTime
-    const stepDuration = sound.duration
+    const now = audioCtx.currentTime
+    const stepDuration = sound.duration + 0.08
 
-    sound.freq.forEach((freq, index) => {
-      const oscillator = notificationAudioContext.createOscillator()
-      const gainNode = notificationAudioContext.createGain()
+    const promises = sound.freq.map((freq, index) => {
+      return new Promise((resolve) => {
+        const oscillator = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
 
-      oscillator.connect(gainNode)
-      gainNode.connect(notificationAudioContext.destination)
+        oscillator.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
 
-      oscillator.type = sound.type
-      oscillator.frequency.value = freq
+        oscillator.type = sound.type
+        oscillator.frequency.value = freq
 
-      const startTime = now + (index * stepDuration)
-      gainNode.gain.setValueAtTime(0.2, startTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + stepDuration)
+        const startTime = now + (index * stepDuration)
+        const endTime = startTime + stepDuration
 
-      oscillator.start(startTime)
-      oscillator.stop(startTime + stepDuration)
+        gainNode.gain.setValueAtTime(0.3, startTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, endTime - 0.01)
+
+        oscillator.start(startTime)
+        oscillator.stop(endTime)
+
+        oscillator.onended = () => {
+          resolve()
+        }
+      })
     })
+
+    // 等待所有音符播放完成
+    await Promise.all(promises)
+
+    // 关闭 AudioContext
+    await audioCtx.close()
+
   } catch (e) {
     console.error('播放提示音失败:', e)
+  } finally {
+    isPlayingNotification = false
   }
 }
 
@@ -776,14 +803,6 @@ function leaveVoice() {
     audioContext.close()
     audioContext = null
   }
-
-  // 延迟关闭提示音上下文，让声音播放完
-  setTimeout(() => {
-    if (notificationAudioContext) {
-      notificationAudioContext.close()
-      notificationAudioContext = null
-    }
-  }, 500)
 
   // 清空用户记录
   previousUserIds.clear()

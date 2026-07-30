@@ -35,6 +35,42 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ==================== 滚动条美化 ==================== */
+
+/* Webkit 浏览器（Chrome、Safari、Edge） */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 240, 248, 0.4);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 170, 195, 0.6);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 150, 180, 0.8);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(255, 170, 195, 0.6) rgba(255, 240, 248, 0.4);
+}
+
 /* iOS 26 液态玻璃效果 */
 @layer components {
   .glass-card {
@@ -143,7 +179,7 @@ body {
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.97);
+    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
@@ -151,45 +187,80 @@ body {
   }
 }
 
-@keyframes overlayIn {
+@keyframes slideDown {
   from {
-    opacity: 0;
-  }
-  to {
     opacity: 1;
-  }
-}
-
-.animate-overlay-in {
-  animation: overlayIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-@keyframes modalIn {
-  from {
-    opacity: 0;
-    transform: scale(0.88) translateY(20px);
+    transform: translateY(0) scale(1);
   }
   to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes overlayOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* iOS 风格弹窗进入动画 - 平滑 */
+@keyframes iosModalIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
+/* iOS 风格弹窗退出动画 */
+@keyframes iosModalOut {
+  0% {
     opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
   }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+.animate-overlay-in {
+  animation: overlayIn 0.2s ease-out;
+  will-change: opacity;
 }
 
 .animate-modal-in {
-  animation: modalIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: iosModalIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity;
+}
+
+/* Vue Transition 动画（全局） */
+.modal-enter-active {
+  animation: overlayIn 0.2s ease-out;
+}
+
+.modal-leave-active {
+  animation: overlayOut 0.15s ease-in forwards;
+}
+
+.modal-enter-active .modal-container,
+.modal-enter-active .glass-card,
+.modal-enter-active .modal {
+  animation: iosModalIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.modal-leave-active .modal-container,
+.modal-leave-active .glass-card,
+.modal-leave-active .modal {
+  animation: iosModalOut 0.15s ease-in forwards;
 }
 
 .animate-fade-in {

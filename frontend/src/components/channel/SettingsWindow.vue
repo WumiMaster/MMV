@@ -1,77 +1,91 @@
 <template>
   <!-- 设置弹窗 -->
-  <div class="modal-overlay animate-overlay-in" @click.self="$emit('close')">
-    <div class="modal-container animate-modal-in">
-      <div class="modal-header">
-        <h3>设置</h3>
-        <button class="close-btn" @click="$emit('close')">×</button>
-      </div>
+  <Teleport to="body">
+    <div class="modal-overlay animate-overlay-in" @click.self="$emit('close')">
+      <div class="modal-container animate-modal-in">
+        <div class="modal-header">
+          <h3>设置</h3>
+          <button class="close-btn" @click="$emit('close')">×</button>
+        </div>
 
-      <div class="modal-body">
-        <div class="settings-section">
-          <h4>个人信息</h4>
-          <div class="setting-item">
-            <label>昵称</label>
-            <div class="current-nickname">
-              当前昵称：{{ authStore.user?.nickname || '未设置' }}
-            </div>
-            <input
-              v-model="nickname"
-              type="text"
-              placeholder="输入新昵称"
-              class="setting-input"
-            />
-          </div>
-          <div class="setting-item">
-            <label>头像</label>
-            <div class="avatar-upload">
-              <div class="avatar-preview">
-                <img v-if="avatarPreview" :src="avatarPreview" alt="头像预览" />
-                <div v-else class="avatar-placeholder">
-                  {{ authStore.user?.nickname?.charAt(0) || '?' }}
+        <div class="modal-body">
+            <!-- 头像区域（居中） -->
+            <div class="avatar-section">
+              <div class="avatar-wrapper" @click="triggerAvatarInput">
+                <div class="avatar-preview">
+                  <img v-if="avatarPreview" :src="avatarPreview" alt="头像预览" />
+                  <img v-else-if="authStore.user?.avatar" :src="authStore.user.avatar" alt="当前头像" />
+                  <div v-else class="avatar-placeholder">
+                    {{ authStore.user?.nickname?.charAt(0) || '?' }}
+                  </div>
+                </div>
+                <div class="avatar-overlay">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  <span>点击更换</span>
                 </div>
               </div>
               <input
+                ref="avatarInput"
                 type="file"
                 accept="image/*"
                 @change="handleAvatarChange"
-                class="file-input"
+                style="display: none"
               />
             </div>
-          </div>
-        </div>
 
-        <div class="settings-section">
-          <h4>音频设置</h4>
-          <div class="setting-item">
-            <label>麦克风</label>
-            <select v-model="selectedMic" class="setting-select">
-              <option value="">选择麦克风</option>
-              <option v-for="device in audioDevices.mics" :key="device.deviceId" :value="device.deviceId">
-                {{ device.label || `麦克风 ${device.deviceId.slice(0, 8)}` }}
-              </option>
-            </select>
+            <!-- 昵称设置 -->
+            <div class="settings-section">
+              <h4>个人信息</h4>
+              <div class="setting-item">
+                <label>昵称</label>
+                <div class="current-nickname">
+                  当前昵称：{{ authStore.user?.nickname || '未设置' }}
+                </div>
+                <input
+                  v-model="nickname"
+                  type="text"
+                  placeholder="输入新昵称"
+                  class="setting-input"
+                />
+              </div>
+            </div>
+
+            <!-- 音频设置 -->
+            <div class="settings-section">
+              <h4>音频设置</h4>
+              <div class="setting-item">
+                <label>麦克风</label>
+                <select v-model="selectedMic" class="setting-select">
+                  <option value="">选择麦克风</option>
+                  <option v-for="device in audioDevices.mics" :key="device.deviceId" :value="device.deviceId">
+                    {{ device.label || `麦克风 ${device.deviceId.slice(0, 8)}` }}
+                  </option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label>扬声器</label>
+                <select v-model="selectedSpeaker" class="setting-select">
+                  <option value="">选择扬声器</option>
+                  <option v-for="device in audioDevices.speakers" :key="device.deviceId" :value="device.deviceId">
+                    {{ device.label || `扬声器 ${device.deviceId.slice(0, 8)}` }}
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div class="setting-item">
-            <label>扬声器</label>
-            <select v-model="selectedSpeaker" class="setting-select">
-              <option value="">选择扬声器</option>
-              <option v-for="device in audioDevices.speakers" :key="device.deviceId" :value="device.deviceId">
-                {{ device.label || `扬声器 ${device.deviceId.slice(0, 8)}` }}
-              </option>
-            </select>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="$emit('close')">取消</button>
+            <button class="btn btn-primary" @click="saveSettings" :disabled="saving">
+              {{ saving ? '保存中...' : '保存' }}
+            </button>
           </div>
         </div>
       </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" @click="$emit('close')">取消</button>
-        <button class="btn btn-primary" @click="saveSettings" :disabled="saving">
-          {{ saving ? '保存中...' : '保存' }}
-        </button>
-      </div>
-    </div>
-  </div>
+    </Teleport>
 </template>
 
 <script setup>
@@ -89,6 +103,7 @@ const authStore = useAuthStore()
 
 // 个人信息
 const nickname = ref(authStore.user?.nickname || '')
+const avatarInput = ref(null)
 const avatarFile = ref(null)
 const avatarPreview = ref(null)
 
@@ -99,6 +114,11 @@ const audioDevices = ref({ mics: [], speakers: [] })
 
 // 状态
 const saving = ref(false)
+
+// 触发头像上传
+function triggerAvatarInput() {
+  avatarInput.value?.click()
+}
 
 // 处理头像选择
 function handleAvatarChange(event) {
@@ -112,9 +132,7 @@ function handleAvatarChange(event) {
 // 获取音频设备列表
 async function getAudioDevices() {
   try {
-    // 先请求麦克风权限，这样才能获取设备标签
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    // 立即停止流，我们只是需要权限
     stream.getTracks().forEach(track => track.stop())
 
     const devices = await navigator.mediaDevices.enumerateDevices()
@@ -123,7 +141,6 @@ async function getAudioDevices() {
       speakers: devices.filter(d => d.kind === 'audiooutput')
     }
 
-    // 设置默认选中设备
     if (audioDevices.value.mics.length > 0 && !selectedMic.value) {
       selectedMic.value = audioDevices.value.mics[0].deviceId
     }
@@ -141,7 +158,7 @@ async function saveSettings() {
 
   try {
     // 更新昵称
-    if (nickname.value) {
+    if (nickname.value && nickname.value !== authStore.user?.nickname) {
       await api.put('/api/auth/profile', { nickname: nickname.value })
       authStore.updateUser({ nickname: nickname.value })
     }
@@ -234,6 +251,80 @@ onMounted(() => {
   max-height: 60vh;
 }
 
+/* 头像区域 */
+.avatar-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.avatar-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(255, 158, 181, 0.3);
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #FF9EB5, #7ED7A7);
+  color: white;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 50%;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay svg {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
+}
+
+.avatar-overlay span {
+  font-size: 10px;
+  color: white;
+}
+
+/* 设置区域 */
 .settings-section {
   margin-bottom: 24px;
 }
@@ -286,50 +377,13 @@ onMounted(() => {
   font-size: 14px;
   outline: none;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .setting-input:focus,
 .setting-select:focus {
   border-color: #FF9EB5;
   box-shadow: 0 0 0 3px rgba(255, 158, 181, 0.2);
-}
-
-.avatar-upload {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.avatar-preview {
-  width: 64px;
-  height: 64px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
-}
-
-.avatar-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #FF9EB5, #7ED7A7);
-  color: white;
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.file-input {
-  flex: 1;
-  font-size: 13px;
 }
 
 .modal-footer {
