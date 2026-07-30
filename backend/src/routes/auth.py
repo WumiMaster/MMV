@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from ..config.database import get_db
 from ..models.user import User, UserRole
@@ -15,6 +15,7 @@ from ..services.auth_service import (
     create_access_token
 )
 from ..middlewares.auth import get_current_user, get_current_admin
+from ..utils.validators import validate_username, validate_password, validate_nickname
 import os
 import uuid
 import shutil
@@ -34,11 +35,49 @@ class RegisterRequest(BaseModel):
     password: str
     nickname: str
 
+    @field_validator('username')
+    @classmethod
+    def validate_username_field(cls, v):
+        is_valid, message = validate_username(v)
+        if not is_valid:
+            raise ValueError(message)
+        return v
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_field(cls, v):
+        is_valid, message = validate_password(v)
+        if not is_valid:
+            raise ValueError(message)
+        return v
+
+    @field_validator('nickname')
+    @classmethod
+    def validate_nickname_field(cls, v):
+        is_valid, message = validate_nickname(v)
+        if not is_valid:
+            raise ValueError(message)
+        return v
+
 
 class LoginRequest(BaseModel):
     """登录请求"""
     username: str
     password: str
+
+    @field_validator('username')
+    @classmethod
+    def validate_username_field(cls, v):
+        if not v or len(v.strip()) == 0:
+            raise ValueError("用户名不能为空")
+        return v.strip()
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_field(cls, v):
+        if not v or len(v.strip()) == 0:
+            raise ValueError("密码不能为空")
+        return v
 
 
 class TokenResponse(BaseModel):

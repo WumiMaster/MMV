@@ -12,6 +12,7 @@ from .routes import auth, admin, admin_channels, channels, messages, websocket, 
 from .models.user import User
 from .models.channel import Channel, SubChannel, UserChannel
 from .models.message import Message
+from .middlewares.security import SecurityHeadersMiddleware, RateLimitMiddleware
 import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -80,7 +81,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="喵喵语音 API",
     description="浏览器端精简版 Discord 后端服务",
-    version="1.0.0",
+    version="1.3.2",
     lifespan=lifespan
 )
 
@@ -100,6 +101,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 安全中间件
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=120)
 
 # 挂载静态文件目录（头像等）
 os.makedirs("uploads", exist_ok=True)
